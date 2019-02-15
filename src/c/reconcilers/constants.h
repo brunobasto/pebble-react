@@ -1,0 +1,7 @@
+// Operations
+#define OPERATION_APPEND_CHILD 1
+#define OPERATION_COMMIT_UPDATE 2
+#define OPERATION_REMOVE_CHILD 3
+
+// Node Types
+#define NODE_TYPE_TEXT_LAYER 1
