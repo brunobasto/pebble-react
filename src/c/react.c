@@ -1,7 +1,7 @@
 #include <pebble.h>
 
 // Libs
-#include "./lib/pebble-c-jsonparser/src/jsonparser.h"
+#include "./lib/pebble-c-jsonparser/jsonparser.h"
 #include "./lib/dictionary/dictionary.h"
 
 // Utils
