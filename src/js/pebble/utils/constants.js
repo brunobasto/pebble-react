@@ -7,5 +7,6 @@ export const Operations = {
 export const NodeTypes = {
     textLayer: '1',
     rootLayer: '2',
-    windowLayer: '3'
+    windowLayer: '3',
+    imageLayer: '4'
 }
