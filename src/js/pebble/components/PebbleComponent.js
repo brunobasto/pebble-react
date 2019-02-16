@@ -104,7 +104,9 @@ class PebbleComponent {
         return serializedProps;
     }
 
-    insertBefore() { }
+    insertBefore(child) {
+        this.appendChild(child);
+    }
 
     getPublicInstance() {
         return this;
