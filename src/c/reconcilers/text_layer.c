@@ -1,4 +1,5 @@
 #include "text_layer.h"
+#include "utils/layer_reconciler_utils.h"
 
 PebbleDictionary *textLayersDict;
 
@@ -21,28 +22,7 @@ static void setTextLayerProperties(TextLayer *textLayer, PebbleDictionary *props
   }
 
   Layer *layer = text_layer_get_layer(textLayer);
-  GRect frame = layer_get_frame(layer);
-  if (dict_has(propsDict, "top"))
-  {
-    uint16_t top = atoi((char *)dict_get(propsDict, "top"));
-    frame.origin.y = top;
-  }
-  if (dict_has(propsDict, "left"))
-  {
-    uint16_t left = atoi((char *)dict_get(propsDict, "left"));
-    frame.origin.x = left;
-  }
-  if (dict_has(propsDict, "width"))
-  {
-    uint16_t width = atoi((char *)dict_get(propsDict, "width"));
-    frame.size.w = width;
-  }
-  if (dict_has(propsDict, "height"))
-  {
-    uint16_t height = atoi((char *)dict_get(propsDict, "height"));
-    frame.size.h = height;
-  }
-  layer_set_frame(layer, frame);
+  set_layer_frame_from_props(layer, propsDict);
 }
 
 static void appendChild(
@@ -51,14 +31,10 @@ static void appendChild(
     const char *nodeId,
     PebbleDictionary *propsDict)
 {
-  uint16_t top = atoi((char *)dict_get(propsDict, "top"));
-  uint16_t left = atoi((char *)dict_get(propsDict, "left"));
-  uint16_t width = atoi((char *)dict_get(propsDict, "width"));
-  uint16_t height = atoi((char *)dict_get(propsDict, "height"));
-  TextLayer *textLayer = text_layer_create(GRect(left, top, width, height));
+  GRect frame = get_layer_frame_from_props(propsDict);
+  TextLayer *textLayer = text_layer_create(frame);
   layer_add_child(parentLayer, text_layer_get_layer(textLayer));
   dict_add(textLayersDict, nodeId, textLayer);
-
   setTextLayerProperties(textLayer, propsDict);
 }
 
@@ -79,7 +55,10 @@ static void removeChild(
   TextLayer *textLayer = (TextLayer *)dict_get(textLayersDict, nodeId);
   Layer *layer = text_layer_get_layer(textLayer);
 
+  layer_set_hidden(layer, true);
+  layer_remove_child_layers(layer);
   layer_remove_from_parent(layer);
+  text_layer_destroy(textLayer);
   layer_destroy(layer);
   dict_remove(textLayersDict, nodeId);
 }
