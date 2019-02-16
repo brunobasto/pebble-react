@@ -59,8 +59,7 @@ static void removeChild(
   layer_remove_child_layers(layer);
   layer_remove_from_parent(layer);
   text_layer_destroy(textLayer);
-  layer_destroy(layer);
-  dict_remove(textLayersDict, nodeId);
+  // dict_remove(textLayersDict, nodeId);
 }
 
 // Public
