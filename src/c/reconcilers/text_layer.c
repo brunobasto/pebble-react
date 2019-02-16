@@ -4,21 +4,45 @@ PebbleDictionary *textLayersDict;
 
 static void setTextLayerProperties(TextLayer *textLayer, PebbleDictionary *propsDict)
 {
-  uint16_t top = atoi((char *)dict_get(propsDict, "top"));
-  uint16_t left = atoi((char *)dict_get(propsDict, "left"));
-  uint16_t width = atoi((char *)dict_get(propsDict, "width"));
-  uint16_t height = atoi((char *)dict_get(propsDict, "height"));
-  char *text = (char *)dict_get(propsDict, "text");
+  if (propsDict == NULL)
+  {
+    return;
+  }
 
   text_layer_set_font(textLayer, fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
   text_layer_set_background_color(textLayer, GColorClear);
   text_layer_set_text_color(textLayer, GColorWhite);
   text_layer_set_text_alignment(textLayer, GTextAlignmentCenter);
 
-  text_layer_set_text(textLayer, text);
+  if (dict_has(propsDict, "children"))
+  {
+    char *text = (char *)dict_get(propsDict, "children");
+    text_layer_set_text(textLayer, text);
+  }
 
   Layer *layer = text_layer_get_layer(textLayer);
-  layer_set_frame(layer, GRect(left, top, width, height));
+  GRect frame = layer_get_frame(layer);
+  if (dict_has(propsDict, "top"))
+  {
+    uint16_t top = atoi((char *)dict_get(propsDict, "top"));
+    frame.origin.y = top;
+  }
+  if (dict_has(propsDict, "left"))
+  {
+    uint16_t left = atoi((char *)dict_get(propsDict, "left"));
+    frame.origin.x = left;
+  }
+  if (dict_has(propsDict, "width"))
+  {
+    uint16_t width = atoi((char *)dict_get(propsDict, "width"));
+    frame.size.w = width;
+  }
+  if (dict_has(propsDict, "height"))
+  {
+    uint16_t height = atoi((char *)dict_get(propsDict, "height"));
+    frame.size.h = height;
+  }
+  layer_set_frame(layer, frame);
 }
 
 static void appendChild(
