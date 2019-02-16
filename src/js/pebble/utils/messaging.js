@@ -37,13 +37,10 @@ const serializeMessage = (message) => {
 }
 
 export const enqueueMessage = (message) => {
-    // queue.push(serializeMessage(message));
     queue.push(message);
 }
 
 export const flushMessages = async () => {
-    // await waitMessaging();
-
     if (busy) {
         return;
     };
@@ -51,14 +48,16 @@ export const flushMessages = async () => {
     if (queue.length > 0) {
         busy = true;
 
+        const operations = serializeMessage(queue);
+
         Pebble.sendAppMessage(
             {
-                batchOperations: serializeMessage(queue),
+                batchOperations: operations,
                 batchOperationsSize: queue.length
             },
             () => {
                 busy = false;
-                console.log('Successfully sent', serializeMessage(queue), 'with ', serializeMessage(queue).length);
+                console.log('Successfully sent', operations, 'with ', operations.length);
                 queue.length = 0;
             },
             () => {
@@ -66,25 +65,5 @@ export const flushMessages = async () => {
                 console.log('Error sending messages', queue);
             }
         );
-
-        // var ack = () => {
-        //     attempts = 0;
-        //     queue.shift();
-        //     busy = false;
-        //     flushMessages();
-        // };
-
-        // var nack = () => {
-        //     attempts++;
-        //     busy = false;
-        //     flushMessages();
-        // };
-
-        // if (attempts >= insistence) {
-        //     console.log('Failed sending AppMessage: ' + JSON.stringify(nextMessage()));
-        //     ack();
-        // }
-        // // console.log('Sending AppMessage: ' + JSON.stringify(nextMessage()));
-        // Pebble.sendAppMessage(nextMessage(), ack, nack);
     }
 }

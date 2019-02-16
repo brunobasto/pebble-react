@@ -11,8 +11,6 @@ class PebbleComponent {
     }
 
     appendChild(child) {
-        // console.log('appendChild', this.nodeType, child.uniqueId);
-
         if (child instanceof PebbleComponent) {
             enqueueMessage(
                 {
@@ -26,8 +24,6 @@ class PebbleComponent {
     }
 
     removeChild(child) {
-        console.log('removeChild', this.nodeType, child.uniqueId);
-
         if (child instanceof PebbleComponent) {
             enqueueMessage(
                 {

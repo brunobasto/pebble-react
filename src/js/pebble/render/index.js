@@ -9,8 +9,6 @@ const DEFAULT_HOST_CONTEXT = {};
 
 const PebbleRenderer = Reconciler({
     appendChild(parent, child) {
-        // console.log('Called reconciler appendChild', Object.keys(child));
-
         if (parent.appendChild) {
             parent.appendChild(child);
         }
@@ -18,19 +16,16 @@ const PebbleRenderer = Reconciler({
     },
 
     appendInitialChild(parent, child) {
-        // console.log('appendInitialChild');
         if (parent.appendChild) {
             parent.appendChild(child);
         }
     },
 
     appendChildToContainer(parent, child) {
-        // console.log('appendChildToContainer');
         parent.appendChild(child);
     },
 
     removeChild(parent, child) {
-        console.log('reconciler remove');
         parent.removeChild(child);
     },
 
@@ -43,7 +38,6 @@ const PebbleRenderer = Reconciler({
     },
 
     createTextInstance(text, rootContainerInstance, internalInstanceHandle) {
-        // console.log('createTextInstance', text);
         return new TextNode(text);
     },
 
@@ -52,17 +46,14 @@ const PebbleRenderer = Reconciler({
     },
 
     insertInContainerBefore(parent, child, beforeChild) {
-        console.log('insertInContainerBefore was called');
         parent.insertBefore(child, beforeChild);
     },
 
     insertBefore(parent, child, beforeChild) {
-        console.log('insertBefore was called');
         parent.insertBefore(child, beforeChild);
     },
 
     finalizeInitialChildren(element, type, props) {
-        // console.log('finalizeInitialChildren');
         return true;
     },
 
@@ -71,8 +62,6 @@ const PebbleRenderer = Reconciler({
     },
 
     prepareForCommit() {
-        // noop
-        // console.log('prepareForCommit');
     },
 
     prepareUpdate(component, type, oldProps, newProps) {
@@ -80,7 +69,6 @@ const PebbleRenderer = Reconciler({
     },
 
     commitMount(component, type, newProps, internalInstanceHandle) {
-        console.log('commitMount');
     },
 
     commitUpdate(
@@ -103,24 +91,17 @@ const PebbleRenderer = Reconciler({
     },
 
     resetAfterCommit() {
-        // console.log('resetAfterCommit', arguments);
         flushMessages();
     },
 
     resetTextContent(wordElement) {
-        // noop
-        // console.log('resetTextContent');
     },
 
     getRootHostContext(rootInstance) {
-        // console.log('getRootHostContext');
-
         return DEFAULT_HOST_CONTEXT;
     },
 
     getChildHostContext(parentHostContext) {
-        // console.log('getChildHostContext');
-
         return parentHostContext;
     },
 
@@ -136,17 +117,11 @@ const PebbleRenderer = Reconciler({
 
 // renders the component
 async function render(element) {
-    // await waitMessaging();
-
     ROOT_NODE = createElement('ROOT');
 
     const node = PebbleRenderer.createContainer(ROOT_NODE);
 
     PebbleRenderer.updateContainer(element, node, null);
-
-    // await sendPebbleRenderMessage({
-    //     renderNodeType: node.type
-    // });
 }
 
 export default render;
