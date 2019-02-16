@@ -1,67 +1,50 @@
 import React, { Component, Fragment } from 'react';
-const imageSize = 76;
-const pebbleWidth = 140;
-const pebbleHeight = 168;
+
+const imageSize = 78;
+const textSize = 25;
+const pebbleWidth = 134;
+const pebbleHeight = 156;
 
 class App extends Component {
     state = {
         loading: false,
-        text: 'start text',
-        textHeight: 80,
-        textTop: 0,
-        textWidth: 40
+        text: 'React'
     };
 
     componentDidMount() {
         setTimeout(
-            () => this.setState({
-                loading: true,
-                text: 'new text',
-                textHeight: 120,
-                textWidth: 40,
-                textTop: 30
-            }
-            ), 3000);
+            () => {
+                this.setState({loading: true});
+                setTimeout(() => this.setState({loading: false, text: 'Rocks'}), 3000);
+            },
+            3000
+        );
     }
 
     render() {
-        const { loading, text, textHeight, textTop, textWidth } = this.state;
+        const { loading, text } = this.state;
 
         return (
-            <window name={text}>
+            <window>
                 {loading === false && (
                     <Fragment>
-                        <text
-                            height={textHeight}
-                            left={0}
-                            top={textTop}
-                            width={textWidth}
-                        >
-                            {'a'}
-                        </text>
-                        <text
-                            height={textHeight}
-                            left={50}
-                            top={textTop + 50}
-                            width={textWidth}
-                        >
-                            {'b'}
-                        </text>
-                        <text
-                            height={textHeight}
-                            left={100}
-                            top={textTop + 100}
-                            width={textWidth}
-                        >
-                            {'c'}
-                        </text>
+                        {text.split('').map((letter, index) => (
+                            <text
+                                height={textSize + 5}
+                                left={index * 30}
+                                top={index * 30}
+                                width={textSize}
+                            >
+                                {letter}
+                            </text>
+                        ))}
                     </Fragment>
                 )}
                 {loading === true && (
                     <image
                         height={imageSize}
-                        left={pebbleWidth/2 - imageSize/2}
-                        top={pebbleHeight/2 - imageSize/2}
+                        left={pebbleWidth / 2 - imageSize / 2}
+                        top={pebbleHeight / 2 - imageSize / 2}
                         width={imageSize}
                     />
                 )}
