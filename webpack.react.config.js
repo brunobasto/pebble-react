@@ -1,3 +1,4 @@
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const path = require('path');
 const webpack = require('webpack');
@@ -13,7 +14,9 @@ const config = {
   module: {
     loaders: [
       {
-        exclude: /node_modules/,
+        exclude: [
+          /node_modules/
+        ],
         include: __dirname,
         loaders: ['babel-loader'],
       },
@@ -28,10 +31,12 @@ const config = {
     path: path.resolve('src/js')
   },
   plugins: [
+    new webpack.DefinePlugin({ "process.env.NODE_ENV": JSON.stringify("production") }),
     new CleanWebpackPlugin(),
-    // new webpack.optimize.UglifyJsPlugin({
-		// 	sourceMap: true
-		// })
+    new webpack.optimize.UglifyJsPlugin({
+      sourceMap: true
+    }),
+    // new BundleAnalyzerPlugin()
   ]
 };
 

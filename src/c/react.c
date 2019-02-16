@@ -10,34 +10,6 @@
 // Reconcilers
 #include "./reconcilers/text_layer.h"
 
-PebbleDictionary *propsDict;
-
-void jsonParserObjectCallback(JSP_ValueType type, char *label, uint16_t label_length, char *value, uint16_t value_length)
-{
-  char *l = calloc(label_length + 1, sizeof(char));
-  char *v = calloc(value_length + 1, sizeof(char));
-  char *s = calloc(value_length - 1, sizeof(char));
-
-  snprintf(l, label_length + 1, "%s", label);
-  snprintf(v, value_length + 1, "%s", value);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "gonna add: %s", v);
-  snprintf(s, value_length + 1, "%s", substr(v, 1, value_length - 1));
-  dict_add(propsDict, l, s);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "did add: %s", s);
-  // s will get freed up when we free the dict
-  free(v);
-  free(l);
-}
-
-void jsonParserArrayCallback(JSP_ValueType type, char *value, uint16_t value_length)
-{
-  char *v = calloc(value_length + 1, sizeof(char));
-
-  snprintf(v, value_length + 1, "%s", value);
-
-  free(v);
-}
-
 // Spinner
 static GBitmapSequence *spinner_sequence;
 static GBitmap *spinner_bitmap;
@@ -51,6 +23,114 @@ static RotBitmapLayer *icon_rot_bitmap_layer;
 
 static Window *s_window;
 static TextLayer *s_text_layer;
+
+PebbleDictionary *operationDict;
+PebbleDictionary *propsDict;
+
+#define MAX_BATCH_OPERATIONS 100
+char *batchOperations[MAX_BATCH_OPERATIONS];
+uint16_t batchOperationsCounter = 0;
+// TODO - do it dynamically
+// char **orderedIds;
+
+// orderedIds = malloc(variableNumberOfElements * sizeof(char*));
+// for (int i = 0; i < variableNumberOfElements; i++)
+//     orderedIds[i] = malloc((ID_LEN+1) * sizeof(char));
+
+char *type_labels[] = {"JSP_VALUE_UNKNOWN", "JSP_VALUE_STRING", "JSP_VALUE_OBJECT", "JSP_VALUE_ARRAY", "JSP_VALUE_PRIMITIVE"};
+
+void parsePropsJSONObject(JSP_ValueType type, char *label, uint16_t label_length, char *value, uint16_t value_length)
+{
+  char *l = calloc(label_length + 1, sizeof(char));
+  char *v = calloc(value_length + 1, sizeof(char));
+  char *s = calloc(value_length - 1, sizeof(char));
+
+  snprintf(l, label_length + 1, "%s", label);
+  snprintf(v, value_length + 1, "%s", value);
+  // APP_LOG(APP_LOG_LEVEL_INFO, "parse prop value(%s, %s, %s)", type_labels[type], l, v);
+  snprintf(s, value_length + 1, "%s", substr(v, 1, value_length - 1));
+  dict_add(propsDict, l, s);
+  free(v);
+  // free(l);
+}
+
+static void handleOperation()
+{
+  // Operation
+  const uint16_t operation = atoi(dict_get(operationDict, "operation"));
+  // APP_LOG(APP_LOG_LEVEL_INFO, "handling operation %d", operation);
+
+  // Node Type
+  const uint16_t nodeType = atoi(dict_get(operationDict, "nodeType"));
+
+  // Node Id
+  const char *nodeId = dict_get(operationDict, "nodeId");
+
+  // Props
+  propsDict = NULL;
+
+  if (dict_has(operationDict, "props"))
+  {
+    propsDict = dict_new();
+
+    const char *propsJSON = dict_get(operationDict, "props");
+
+    // APP_LOG(APP_LOG_LEVEL_INFO, "handling props %s", propsJSON);
+
+    json_register_callbacks(parsePropsJSONObject, NULL);
+
+    json_parser(propsJSON);
+  }
+
+  Layer *window_layer = window_get_root_layer(s_window);
+
+  // APP_LOG(APP_LOG_LEVEL_INFO, "calling reconciler");
+
+  // Reconcilers
+  text_layer_reconciler(window_layer, operation, nodeType, nodeId, propsDict);
+
+  dict_free(propsDict);
+}
+
+void parseBatchOperationsJSONObject(JSP_ValueType type, char *label, uint16_t label_length, char *value, uint16_t value_length)
+{
+  // APP_LOG(APP_LOG_LEVEL_INFO, "type of object value(%s, %s, %s)", type_labels[type], label, value);
+
+  char *l = calloc(label_length + 1, sizeof(char));
+  char *v = calloc(value_length + 1, sizeof(char));
+
+  snprintf(l, label_length + 1, "%s", label);
+  snprintf(v, value_length + 1, "%s", value);
+
+  if (strcmp(type_labels[type], "JSP_VALUE_OBJECT") == 0)
+  {
+    dict_add(operationDict, l, v);
+  }
+  else
+  {
+    char *s = calloc(value_length - 1, sizeof(char));
+    snprintf(s, value_length + 1, "%s", substr(v, 1, value_length - 1));
+    dict_add(operationDict, l, s);
+    free(v);
+  }
+
+  // free(l);
+}
+
+void parseBatchOperationsJSONArray(JSP_ValueType type, char *value, uint16_t value_length)
+{
+  char *v = calloc(value_length + 1, sizeof(char));
+  snprintf(v, value_length + 1, "%s", value);
+
+  // APP_LOG(APP_LOG_LEVEL_INFO, "type of array value(%s, %s, %d)", type_labels[type], value, value_length);
+
+  if (strcmp(type_labels[type], "JSP_VALUE_OBJECT") == 0)
+  {
+    // APP_LOG(APP_LOG_LEVEL_INFO, "objectInArray(%s)", v);
+
+    batchOperations[batchOperationsCounter++] = v;
+  }
+}
 
 static void runSpinnerSequence();
 
@@ -182,41 +262,47 @@ static void handleMessageOutFailed(DictionaryIterator *failed, AppMessageResult 
 
 static void handleMessageReceived(DictionaryIterator *received, void *context)
 {
+  // APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message");
   Layer *window_layer = window_get_root_layer(s_window);
 
   Tuple *tuple;
 
-  // Operation
-  tuple = dict_find(received, MESSAGE_KEY_operation);
-
-  const uint16_t operation = tuple->value->uint16;
-
-  // Node Type
-  tuple = dict_find(received, MESSAGE_KEY_nodeType);
-
-  const uint16_t nodeType = tuple->value->uint16;
-
-  // Node Id
-  tuple = dict_find(received, MESSAGE_KEY_nodeId);
-
-  const char *nodeId = tuple->value->cstring;
-
-  // Props
-  tuple = dict_find(received, MESSAGE_KEY_props);
+  // Batch Operations
+  tuple = dict_find(received, MESSAGE_KEY_batchOperations);
 
   if (tuple)
   {
-    char *propsJSON = tuple->value->cstring;
+    char *batchOperationsJSON = tuple->value->cstring;
 
-    propsDict = dict_new();
+    json_register_callbacks(NULL, parseBatchOperationsJSONArray);
 
-    json_parser(propsJSON);
-  }
+    // APP_LOG(APP_LOG_LEVEL_DEBUG, "JSON %d : %s", strlen(batchOperationsJSON), batchOperationsJSON);
 
-  text_layer_reconciler(window_layer, operation, nodeType, nodeId, propsDict);
+    JSP_ErrorType error = json_parser(batchOperationsJSON);
 
-  if (tuple) {
-    dict_free(propsDict);
+    // APP_LOG(APP_LOG_LEVEL_DEBUG, "Result 0x%x\n", error);
+
+    for (uint16_t i = 0; i < batchOperationsCounter; i++)
+    {
+      operationDict = dict_new();
+
+      json_register_callbacks(parseBatchOperationsJSONObject, NULL);
+
+      JSP_ErrorType error = json_parser(batchOperations[i]);
+
+      // APP_LOG(APP_LOG_LEVEL_DEBUG, "Operation Result 0x%x\n", error);
+
+      if (error == JSP_OK)
+      {
+        handleOperation();
+      }
+
+      dict_free(operationDict);
+
+      free(batchOperations[i]);
+    }
+
+    batchOperationsCounter = 0;
   }
 }
 
@@ -229,7 +315,7 @@ static void configureAppMessage()
 
   // Initialize AppMessage inbox and outbox buffers with a suitable size
   const int inbox_size = 8200;
-  const int outbox_size = 512;
+  const int outbox_size = 8200;
   app_message_open(inbox_size, outbox_size);
 }
 
@@ -242,13 +328,12 @@ static void prv_window_load(Window *window)
 
 static void prv_window_unload(Window *window)
 {
-  text_layer_destroy(s_text_layer);
+  // text_layer_destroy(s_text_layer);
 }
 
 static void prv_init(void)
 {
   configureAppMessage();
-  json_register_callbacks(jsonParserObjectCallback, jsonParserArrayCallback);
 
   // <Window>
   s_window = window_create();

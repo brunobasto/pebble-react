@@ -1,35 +1,41 @@
 import Reconciler from 'react-reconciler';
 import { createElement } from '../utils/createElement';
 import TextNode from '../components/TextNode';
+import { flushMessages, waitMessaging } from '../utils/messaging'
 
 export let ROOT_NODE = {};
 
 const DEFAULT_HOST_CONTEXT = {};
 
 const PebbleRenderer = Reconciler({
-    appendChild(parentInstance, child) {
-        console.log('Called reconciler appendChild', Object.keys(child));
+    appendChild(parent, child) {
+        // console.log('Called reconciler appendChild', Object.keys(child));
 
-        if (parentInstance.appendChild) {
-            parentInstance.appendChild(child);
+        if (parent.appendChild) {
+            parent.appendChild(child);
         }
-        if (typeof child.render === 'function') child.render(parentInstance); // we just added a new child, so we want to render it
+        if (typeof child.render === 'function') child.render(parent); // we just added a new child, so we want to render it
     },
 
-    appendInitialChild(parentInstance, child) {
-        console.log('appendInitialChild');
-        if (parentInstance.appendChild) {
-            parentInstance.appendInitialChild(child);
+    appendInitialChild(parent, child) {
+        // console.log('appendInitialChild');
+        if (parent.appendChild) {
+            parent.appendChild(child);
         }
     },
 
-    removeChild(parentInstance, child) {
-        parentInstance.removeChild(child);
+    appendChildToContainer(parent, child) {
+        // console.log('appendChildToContainer');
+        parent.appendChild(child);
     },
 
-    appendChildToContainer(parentInstance, child) {
-        console.log('appendChildToContainer');
-        parentInstance.appendChild(child);
+    removeChild(parent, child) {
+        console.log('reconciler remove');
+        parent.removeChild(child);
+    },
+
+    removeChildFromContainer(parent, child) {
+        parent.removeChild(child);
     },
 
     createInstance(type, props, internalInstanceHandle) {
@@ -37,7 +43,7 @@ const PebbleRenderer = Reconciler({
     },
 
     createTextInstance(text, rootContainerInstance, internalInstanceHandle) {
-        console.log('createTextInstance', text);
+        // console.log('createTextInstance', text);
         return new TextNode(text);
     },
 
@@ -45,9 +51,19 @@ const PebbleRenderer = Reconciler({
         textInstance.commitUpdate(newText);
     },
 
+    insertInContainerBefore(parent, child, beforeChild) {
+        console.log('insertInContainerBefore was called');
+        parent.insertBefore(child, beforeChild);
+    },
+
+    insertBefore(parent, child, beforeChild) {
+        console.log('insertBefore was called');
+        parent.insertBefore(child, beforeChild);
+    },
+
     finalizeInitialChildren(element, type, props) {
-        console.log('finalizeInitialChildren');
-        return false;
+        // console.log('finalizeInitialChildren');
+        return true;
     },
 
     getPublicInstance(inst) {
@@ -56,7 +72,7 @@ const PebbleRenderer = Reconciler({
 
     prepareForCommit() {
         // noop
-        console.log('prepareForCommit');
+        // console.log('prepareForCommit');
     },
 
     prepareUpdate(component, type, oldProps, newProps) {
@@ -75,27 +91,35 @@ const PebbleRenderer = Reconciler({
         newProps,
         internalInstanceHandle
     ) {
-        component.commitUpdate(newProps);
+        const changed = {};
+
+        for (const key in newProps) {
+            if (oldProps[key] !== newProps[key]) {
+                changed[key] = newProps[key];
+            }
+        }
+
+        component.commitUpdate(changed);
     },
 
     resetAfterCommit() {
-        // noop
-        console.log('resetAfterCommit');
+        // console.log('resetAfterCommit', arguments);
+        flushMessages();
     },
 
     resetTextContent(wordElement) {
         // noop
-        console.log('resetTextContent');
+        // console.log('resetTextContent');
     },
 
     getRootHostContext(rootInstance) {
-        console.log('getRootHostContext');
+        // console.log('getRootHostContext');
 
         return DEFAULT_HOST_CONTEXT;
     },
 
     getChildHostContext(parentHostContext) {
-        console.log('getChildHostContext');
+        // console.log('getChildHostContext');
 
         return parentHostContext;
     },
@@ -112,6 +136,8 @@ const PebbleRenderer = Reconciler({
 
 // renders the component
 async function render(element) {
+    // await waitMessaging();
+
     ROOT_NODE = createElement('ROOT');
 
     const node = PebbleRenderer.createContainer(ROOT_NODE);

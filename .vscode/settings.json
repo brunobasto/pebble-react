@@ -1,0 +1,22 @@
+{
+    "files.associations": {
+        "__string": "c",
+        "string": "c",
+        "string_view": "c",
+        "iosfwd": "c",
+        "__bit_reference": "c",
+        "__functional_base": "c",
+        "atomic": "c",
+        "deque": "c",
+        "functional": "c",
+        "iterator": "c",
+        "limits": "c",
+        "memory": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "vector": "c",
+        "__functional_base_03": "c",
+        "__tuple": "c",
+        "utility": "c"
+    }
+}

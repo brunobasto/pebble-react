@@ -1,5 +1,5 @@
 {
-  "name": "react-pebble",
+  "name": "pebble-react",
   "author": "MakeAwesomeHappen",
   "version": "1.0.0",
   "keywords": [
@@ -19,11 +19,13 @@
   "dependencies": {
     "babel-polyfill": "^6.26.0",
     "react": "^16.3.2",
-    "react-reconciler": "^0.11.0"
+    "react-reconciler": "^0.20.0"
   },
   "scripts": {
-    "build": "webpack --config webpack.react.config.js && pebble build",
-    "emulator": "npm run build && pebble install --emulator basalt --logs"
+    "compile": "npm run build && pebble build",
+    "build": "webpack --config webpack.react.config.js",
+    "emulator": "npm run compile && pebble install --emulator basalt --logs",
+    "phone": "npm run compile && pebble install --phone 192.168.15.6 --logs"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -42,10 +44,11 @@
     "clean-webpack-plugin": "^1.0.1",
     "eslint": "^4.10.0",
     "eslint-plugin-react": "^7.4.0",
-    "webpack": "^1.8.7"
+    "webpack": "^1.8.7",
+    "webpack-bundle-analyzer": "^3.0.4"
   },
   "pebble": {
-    "displayName": "react",
+    "displayName": "Pebble React",
     "uuid": "aad6f4cd-02a3-40ea-a180-5ec43b037eb2",
     "sdkVersion": "3",
     "enableMultiJS": true,
@@ -59,10 +62,8 @@
       "watchface": false
     },
     "messageKeys": [
-      "operation",
-      "nodeType",
-      "nodeId",
-      "props"
+      "batchOperations",
+      "batchOperationsSize"
     ],
     "resources": {
       "media": [

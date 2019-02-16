@@ -1,18 +1,24 @@
 import React, { Component } from 'react';
 
 class App extends Component {
-    state = { text: 'start text', textHeight: 60, textTop: 0 };
+    state = {
+        text: 'start text',
+        textHeight: 80,
+        textTop: 0,
+        textWidth: 40
+    };
 
     componentDidMount() {
         setTimeout(() => this.setState({
             text: 'new text',
             textHeight: 120,
+            textWidth: 40,
             textTop: 30
         }), 1000);
     }
 
     render() {
-        const { text, textHeight, textTop } = this.state;
+        const { text, textHeight, textTop, textWidth } = this.state;
 
         return (
             <window name={text}>
@@ -20,7 +26,8 @@ class App extends Component {
                     height={textHeight}
                     left={0}
                     top={textTop}
-                    width={20}
+                    width={textWidth}
+                    key={'a'}
                 >
                     {'a'}
                 </text>
@@ -28,19 +35,21 @@ class App extends Component {
                 {textTop === 0 && (
                     <text
                         height={textHeight}
-                        left={45}
-                        top={textTop}
-                        width={20}
+                        left={50}
+                        top={textTop + 100}
+                        width={textWidth}
+                        key={'b'}
                     >
-                        {text}
+                        {'b'}
                     </text>
                 )}
 
                 <text
                     height={textHeight}
-                    left={90}
-                    top={textTop}
-                    width={20}
+                    left={100}
+                    key={'c'}
+                    top={textTop + 50}
+                    width={textWidth}
                 >
                     {'c'}
                 </text>
