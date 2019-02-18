@@ -1,4 +1,4 @@
-import { Root, ImageLayer, TextLayer, Window } from '../components';
+import { Root, Animation, ImageLayer, TextLayer, Window } from '../components';
 import { NodeTypes } from './constants';
 
 /**
@@ -12,6 +12,7 @@ function createElement(type, props) {
         'window': () => new Window(props, NodeTypes.windowLayer),
         'text': () => new TextLayer(props, NodeTypes.textLayer),
         'image': () => new ImageLayer(props, NodeTypes.imageLayer),
+        'animation': () => new Animation(props, NodeTypes.animation),
         ROOT: () => new Root({}, NodeTypes.rootLayer),
         default: undefined
     }

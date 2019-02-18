@@ -8,5 +8,6 @@ export const NodeTypes = {
     textLayer: '1',
     rootLayer: '2',
     windowLayer: '3',
-    imageLayer: '4'
+    imageLayer: '4',
+    animation: '5'
 }

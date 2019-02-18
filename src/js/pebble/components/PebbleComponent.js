@@ -8,6 +8,7 @@ class PebbleComponent {
         this.props = props;
         this.uniqueId = `${nodeType}${++idCounter}`;
         this.nodeType = nodeType;
+        this._children = [];
     }
 
     appendChild(child) {
@@ -21,6 +22,8 @@ class PebbleComponent {
                 }
             );
         }
+
+        this._children.push(child);
     }
 
     removeChild(child) {
@@ -32,7 +35,15 @@ class PebbleComponent {
                     nodeId: child.uniqueId
                 }
             );
+
+            child.remove();
         }
+
+        this._children = this._children.filter(c => c !== child);
+    }
+
+    remove() {
+
     }
 
     prepareUpdate(oldProps, newProps) {
@@ -85,6 +96,10 @@ class PebbleComponent {
         return true;
     }
 
+    getInternalProps() {
+        return {};
+    }
+
     getPropsAfterGetters(component, props) {
         const serializedProps = {};
 
@@ -101,7 +116,10 @@ class PebbleComponent {
             }
         }
 
-        return serializedProps;
+        return {
+            ...serializedProps,
+            ...component.getInternalProps()
+        };
     }
 
     insertBefore(child) {
