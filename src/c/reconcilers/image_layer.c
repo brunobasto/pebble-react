@@ -1,7 +1,7 @@
 #include "image_layer.h"
 #include "utils/layer_reconciler_utils.h"
 
-PebbleDictionary *imageLayersDict;
+static PebbleDictionary *imageLayersDict;
 
 static void setImageLayerProperties(Layer *imageLayer, PebbleDictionary *propsDict)
 {

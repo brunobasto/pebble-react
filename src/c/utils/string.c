@@ -8,7 +8,7 @@ char *substr(const char *src, int m, int n)
   int len = n - m;
 
   // allocate (len + 1) chars for destination (+1 for extra null character)
-  char *dest = (char *)malloc(sizeof(char) * (len + 1));
+  char *dest = (char *)calloc(len + 1, sizeof(char));
 
   // extracts characters between m'th and n'th index from source string
   // and copy them into the destination string
