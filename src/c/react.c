@@ -10,6 +10,8 @@
 // Reconcilers
 #include "./reconcilers/text_layer.h"
 #include "./reconcilers/image_layer.h"
+#include "./reconcilers/animation.h"
+#include "./reconcilers/utils/layer_reconciler_utils.h"
 
 AppTimer *timer;
 
@@ -19,14 +21,9 @@ PebbleDictionary *operationDict;
 PebbleDictionary *propsDict;
 
 #define MAX_BATCH_OPERATIONS 100
+// TODO - do it dynamically
 char *batchOperations[MAX_BATCH_OPERATIONS];
 uint16_t batchOperationsCounter = 0;
-// TODO - do it dynamically
-// char **orderedIds;
-
-// orderedIds = malloc(variableNumberOfElements * sizeof(char*));
-// for (int i = 0; i < variableNumberOfElements; i++)
-//     orderedIds[i] = malloc((ID_LEN+1) * sizeof(char));
 
 char *type_labels[] = {"JSP_VALUE_UNKNOWN", "JSP_VALUE_STRING", "JSP_VALUE_OBJECT", "JSP_VALUE_ARRAY", "JSP_VALUE_PRIMITIVE"};
 
@@ -34,19 +31,32 @@ void parsePropsJSONObject(JSP_ValueType type, char *label, uint16_t label_length
 {
   char *l = calloc(label_length + 1, sizeof(char));
   char *v = calloc(value_length + 1, sizeof(char));
-  char *s = calloc(value_length - 1, sizeof(char));
 
   snprintf(l, label_length + 1, "%s", label);
   snprintf(v, value_length + 1, "%s", value);
-  // APP_LOG(APP_LOG_LEVEL_INFO, "parse prop value(%s, %s, %s)", type_labels[type], l, v);
-  snprintf(s, value_length + 1, "%s", substr(v, 1, value_length - 1));
-  dict_add(propsDict, l, s);
-  free(v);
+
+  if (strcmp(type_labels[type], "JSP_VALUE_STRING") == 0)
+  {
+    char *s = calloc(value_length - 1, sizeof(char));
+    snprintf(s, value_length + 1, "%s", substr(v, 1, value_length - 1));
+    dict_add(propsDict, l, s);
+    free(v);
+  }
+  else
+  {
+    // APP_LOG(APP_LOG_LEVEL_INFO, "added non string prop %s: %s", l, v);
+    dict_add(propsDict, l, v);
+  }
+
   free(l);
 }
 
 static void handleOperation()
 {
+  if (dict_has(operationDict, "operation") != 1) {
+    return;
+  }
+
   // Operation
   const uint16_t operation = atoi(dict_get(operationDict, "operation"));
   // APP_LOG(APP_LOG_LEVEL_INFO, "handling operation %d", operation);
@@ -76,19 +86,25 @@ static void handleOperation()
   // Reconcilers
   text_layer_reconciler(window_layer, operation, nodeType, nodeId, propsDict);
   image_layer_reconciler(window_layer, operation, nodeType, nodeId, propsDict);
+  animation_reconciler(window_layer, operation, nodeType, nodeId, propsDict);
 
-  dict_free(propsDict);
+  // APP_LOG(APP_LOG_LEVEL_INFO, "did all reconcilers %d", nodeType);
+
+  // Restore because reconcilers might have changed it
+  json_register_callbacks(parsePropsJSONObject, NULL);
+
+  // dict_free(propsDict);
 }
 
 void parseBatchOperationsJSONObject(JSP_ValueType type, char *label, uint16_t label_length, char *value, uint16_t value_length)
 {
-  // APP_LOG(APP_LOG_LEVEL_INFO, "type of object value(%s, %s, %s)", type_labels[type], label, value);
-
   char *l = calloc(label_length + 1, sizeof(char));
   char *v = calloc(value_length + 1, sizeof(char));
 
   snprintf(l, label_length + 1, "%s", label);
   snprintf(v, value_length + 1, "%s", value);
+
+  // APP_LOG(APP_LOG_LEVEL_INFO, "type of object value(%s, %s, %s)", type_labels[type], l, v);
 
   if (strcmp(type_labels[type], "JSP_VALUE_OBJECT") == 0)
   {
@@ -112,17 +128,9 @@ void parseBatchOperationsJSONArray(JSP_ValueType type, char *value, uint16_t val
 
   if (strcmp(type_labels[type], "JSP_VALUE_OBJECT") == 0)
   {
+    // APP_LOG(APP_LOG_LEVEL_INFO, "batch(%s)", v);
     batchOperations[batchOperationsCounter++] = v;
   }
-}
-
-static void handleAnimationTimer(void *context)
-{
-  // uint32_t next_delay = 10;
-
-  // rot_bitmap_layer_increment_angle(icon_rot_bitmap_layer, DEG_TO_TRIGANGLE(15));
-
-  // timer = app_timer_register(next_delay, handleAnimationTimer, NULL);
 }
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *context)
@@ -145,11 +153,6 @@ static void prv_click_config_provider(void *context)
   window_single_click_subscribe(BUTTON_ID_SELECT, prv_select_click_handler);
   window_single_click_subscribe(BUTTON_ID_UP, prv_up_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, prv_down_click_handler);
-}
-
-static void addIconLayer(Layer *window_layer)
-{
-  // timer = app_timer_register(1, handleAnimationTimer, NULL);
 }
 
 static void handleMessageDropped(AppMessageResult reason, void *context)
@@ -213,13 +216,10 @@ static void configureAppMessage()
 static void prv_window_load(Window *window)
 {
   window_set_background_color(window, GColorRed);
-  // Layer *window_layer = window_get_root_layer(window);
-  // addIconLayer(window_layer);
 }
 
 static void prv_window_unload(Window *window)
 {
-  // text_layer_destroy(s_text_layer);
 }
 
 static void prv_init(void)
@@ -240,14 +240,19 @@ static void prv_init(void)
   window_stack_push(s_window, animated);
   // </Window>
 
+  layer_registry_init();
+
   text_layer_reconciler_init();
   image_layer_reconciler_init();
+  animation_reconciler_init();
 }
 
 static void prv_deinit(void)
 {
   text_layer_reconciler_deinit();
   image_layer_reconciler_deinit();
+  animation_reconciler_deinit();
+  layer_registry_deinit();
 
   window_destroy(s_window);
 }
@@ -255,9 +260,6 @@ static void prv_deinit(void)
 int main(void)
 {
   prv_init();
-
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Done initializing, pushed window: %p", s_window);
-
   app_event_loop();
   prv_deinit();
 }

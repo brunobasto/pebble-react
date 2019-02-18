@@ -6,3 +6,4 @@
 // Node Types
 #define NODE_TYPE_TEXT_LAYER 1
 #define NODE_TYPE_IMAGE_LAYER 4
+#define NODE_TYPE_ANIMATION 5

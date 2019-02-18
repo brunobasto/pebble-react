@@ -1,77 +1,127 @@
 #include "text_layer.h"
 #include "utils/layer_reconciler_utils.h"
 
-PebbleDictionary *textLayersDict;
+static PebbleDictionary *layerPropsDict;
 
-static void setTextLayerProperties(TextLayer *textLayer, PebbleDictionary *propsDict)
+static GTextAlignment getTextAlignment(char *alignmentValue)
 {
-  if (propsDict == NULL)
+  if (strcmp(alignmentValue, "center") == 0)
   {
+    return GTextAlignmentCenter;
+  }
+  if (strcmp(alignmentValue, "left") == 0)
+  {
+    return GTextAlignmentLeft;
+  }
+
+  return GTextAlignmentRight;
+}
+
+static void setupInitialProps(const char *nodeId, PebbleDictionary *propsDict)
+{
+  if (!dict_has(propsDict, "font"))
+  {
+    dict_add(propsDict, "font", fonts_get_system_font(FONT_KEY_ROBOTO_CONDENSED_21));
+  }
+  if (!dict_has(propsDict, "children"))
+  {
+    dict_add(propsDict, "children", (void *)"");
+  }
+  if (!dict_has(propsDict, "alignment"))
+  {
+    dict_add(propsDict, "alignment", (void *)"center");
+  }
+  if (!dict_has(propsDict, "color"))
+  {
+    dict_add(propsDict, "color", &GColorWhite);
+  }
+
+  dict_add(layerPropsDict, nodeId, propsDict);
+}
+
+static void handleCanvasUpdate(Layer *layer, GContext *ctx)
+{
+  char *nodeId = layer_registry_get_node_id(layer);
+
+  if (nodeId == NULL)
+  {
+    APP_LOG(APP_LOG_LEVEL_INFO, "not found, return");
     return;
   }
 
-  text_layer_set_font(textLayer, fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
-  text_layer_set_background_color(textLayer, GColorClear);
-  text_layer_set_text_color(textLayer, GColorWhite);
-  text_layer_set_text_alignment(textLayer, GTextAlignmentCenter);
+  PebbleDictionary *propsDict = (PebbleDictionary *)dict_get(layerPropsDict, nodeId);
 
-  if (dict_has(propsDict, "children"))
-  {
-    char *text = (char *)dict_get(propsDict, "children");
-    text_layer_set_text(textLayer, text);
-  }
+  graphics_context_set_text_color(ctx, *(GColor *)dict_get(propsDict, "color"));
 
-  Layer *layer = text_layer_get_layer(textLayer);
-  set_layer_frame_from_props(layer, propsDict);
+  graphics_draw_text(
+      ctx,
+      (char *)dict_get(propsDict, "children"),
+      (GFont)dict_get(propsDict, "font"),
+      layer_get_bounds(layer),
+      GTextOverflowModeWordWrap,
+      getTextAlignment((char *)dict_get(propsDict, "alignment")),
+      NULL);
+}
+
+static void commitUpdate(
+    const char *nodeId,
+    PebbleDictionary *newProps)
+{
+  // Merge newProps with cachedProps
+  PebbleDictionary *cachedProps = (PebbleDictionary *)dict_get(layerPropsDict, nodeId);
+  layer_utils_merge_props(cachedProps, newProps);
+
+  Layer *layer = layer_registry_get(nodeId);
+  set_layer_frame_from_props(layer, cachedProps);
 }
 
 static void appendChild(
     Layer *parentLayer,
-    const uint16_t nodeType,
     const char *nodeId,
     PebbleDictionary *propsDict)
 {
+  setupInitialProps(nodeId, propsDict);
+
   GRect frame = get_layer_frame_from_props(propsDict);
-  TextLayer *textLayer = text_layer_create(frame);
-  layer_add_child(parentLayer, text_layer_get_layer(textLayer));
-  dict_add(textLayersDict, nodeId, textLayer);
-  setTextLayerProperties(textLayer, propsDict);
+  Layer *layer = layer_create(frame);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "adding %p to %s", layer, nodeId);
+  layer_registry_add(nodeId, layer);
+  layer_registry_add_reconciler(layer, commitUpdate);
+  layer_add_child(parentLayer, layer);
+  layer_set_update_proc(layer, handleCanvasUpdate);
 }
 
-static void commitUpdate(
-    const uint16_t nodeType,
-    const char *nodeId,
-    PebbleDictionary *propsDict)
+static void removeChild(const char *nodeId)
 {
-  TextLayer *textLayer = (TextLayer *)dict_get(textLayersDict, nodeId);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "removing %s", nodeId);
 
-  setTextLayerProperties(textLayer, propsDict);
-}
+  if (layer_registry_has(nodeId))
+  {
+    Layer *layer = layer_registry_get(nodeId);
 
-static void removeChild(
-    const uint16_t nodeType,
-    const char *nodeId)
-{
-  TextLayer *textLayer = (TextLayer *)dict_get(textLayersDict, nodeId);
-  Layer *layer = text_layer_get_layer(textLayer);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "removing %p from %s", layer, nodeId);
 
-  layer_set_hidden(layer, true);
-  layer_remove_child_layers(layer);
-  layer_remove_from_parent(layer);
-  text_layer_destroy(textLayer);
-  // dict_remove(textLayersDict, nodeId);
+    layer_remove_child_layers(layer);
+    layer_remove_from_parent(layer);
+
+    layer_destroy(layer);
+
+    layer_registry_remove(nodeId);
+  }
+
+  dict_remove(layerPropsDict, nodeId);
 }
 
 // Public
 
 void text_layer_reconciler_init()
 {
-  textLayersDict = dict_new();
+  layerPropsDict = dict_new();
 }
 
 void text_layer_reconciler_deinit()
 {
-  dict_free(textLayersDict);
+  dict_free(layerPropsDict);
 }
 
 void text_layer_reconciler(
@@ -89,13 +139,13 @@ void text_layer_reconciler(
   switch (operation)
   {
   case OPERATION_APPEND_CHILD:
-    appendChild(parentLayer, nodeType, nodeId, propsDict);
+    appendChild(parentLayer, nodeId, propsDict);
     break;
   case OPERATION_COMMIT_UPDATE:
-    commitUpdate(nodeType, nodeId, propsDict);
+    commitUpdate(nodeId, propsDict);
     break;
   case OPERATION_REMOVE_CHILD:
-    removeChild(nodeType, nodeId);
+    removeChild(nodeId);
     break;
   default:
     break;
