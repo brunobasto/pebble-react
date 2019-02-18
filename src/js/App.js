@@ -12,31 +12,61 @@ class App extends Component {
     };
 
     componentDidMount() {
-        setTimeout(
-            () => {
-                this.setState({loading: true});
-                setTimeout(() => this.setState({loading: false, text: 'Rocks'}), 3000);
-            },
-            3000
-        );
+        // setTimeout(
+        //     () => {
+        //         this.setState({ loading: true });
+        //         setTimeout(() => this.setState({ loading: false, text: 'Rocks' }), 3000);
+        //     },
+        //     3000
+        // );
     }
 
     render() {
         const { loading, text } = this.state;
 
         return (
-            <window>
+            <window name="some">
                 {loading === false && (
                     <Fragment>
-                        {text.split('').map((letter, index) => (
-                            <text
-                                height={textSize + 5}
-                                left={index * 30}
-                                top={index * 30}
-                                width={textSize}
+                        {'React'.split('').map((letter, index) => (
+                            <animation
+                                animationProps={{
+                                    top: {
+                                        start: (index * -30) - 30,
+                                        end: 50
+                                    }
+                                }}
+                                duration={1000}
                             >
-                                {letter}
-                            </text>
+                                <text
+                                    height={textSize + 5}
+                                    left={index * 30}
+                                    top={-1000}
+                                    width={textSize}
+                                >
+                                    {letter}
+                                </text>
+                            </animation>
+                        ))}
+                        {'Rocks'.split('').map((letter, index) => (
+                            <animation
+                                animationProps={{
+                                    left: {
+                                        start: 500,
+                                        end: (index * 30)
+                                    }
+                                }}
+                                duration={2000}
+                            >
+                                <text
+                                    height={textSize + 5}
+                                    left={-1000}
+                                    top={80}
+                                    width={textSize}
+                                >
+                                    {letter}
+                                </text>
+                            </animation>
                         ))}
                     </Fragment>
                 )}
