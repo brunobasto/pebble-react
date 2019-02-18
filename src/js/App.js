@@ -12,7 +12,7 @@ class App extends Component {
                                 end: 50
                             }
                         }}
-                        duration={1000}
+                        duration={2000}
                     >
                         <text
                             height={30}
@@ -28,11 +28,11 @@ class App extends Component {
                     <animation
                         animationProps={{
                             left: {
-                                start: 500,
+                                start: 1000,
                                 end: (index * 30)
                             }
                         }}
-                        duration={2000}
+                        duration={3000}
                     >
                         <text
                             height={30}
