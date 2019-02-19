@@ -23,4 +23,6 @@ void *layer_registry_get_reconciler(Layer *layer);
 
 void layer_registry_add_reconciler(Layer *layer, void *reconciler);
 
+void layer_registry_remove_reconciler(Layer *layer);
+
 GRect get_layer_frame_from_props(PebbleDictionary *propsDict);

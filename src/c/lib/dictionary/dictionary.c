@@ -44,6 +44,8 @@ int dict_has(PebbleDictionary *dictionary, const char *key)
         return 0;
     if (dictionary->head == NULL)
         return 0;
+    if (dictionary->head->key == NULL)
+        return 0;
     while (dictionary != NULL)
     {
         if (strcmp(dictionary->head->key, key) == 0)
@@ -73,22 +75,45 @@ void dict_remove(PebbleDictionary *dictionary, const char *key)
     if (dictionary->head == NULL)
         return;
 
-    PebbleDictionary *current = dictionary;
+    PebbleDictionary *previous = NULL;
 
-    while (current != NULL)
+    while (dictionary != NULL)
     {
-        if (strcmp(current->head->key, key) == 0)
+        if (strcmp(dictionary->head->key, key) == 0)
         {
-            if (current->tail != NULL)
+            if (previous != NULL)
             {
-                PebbleDictionary *temp = current->tail;
-                current->head = current->tail->head;
-                current->tail = temp->tail;
-                free(temp);
+                previous->tail = dictionary->tail;
+                free(dictionary->head->key);
+                dictionary->head->key = NULL;
+                free(dictionary->head);
+                dictionary->head = NULL;
+                free(dictionary);
             }
+            else
+            {
+                if (dictionary->tail != NULL)
+                {
+                    PebbleDictionary *next = dictionary->tail;
+                    free(dictionary->head->key);
+                    free(dictionary->head);
+                    dictionary->head = next->head;
+                    dictionary->tail = next->tail;
+                    free(next);
+                }
+                else
+                {
+                    free(dictionary->head->key);
+                    dictionary->head->key = NULL;
+                    free(dictionary->head);
+                    dictionary->head = NULL;
+                }
+            }
+
             return;
         }
-        current = current->tail;
+        previous = dictionary;
+        dictionary = dictionary->tail;
     }
 }
 
@@ -103,8 +128,12 @@ void dict_free(PebbleDictionary *dictionary)
             free(dictionary->head->key);
         free(dictionary->head);
     }
-
-    PebbleDictionary *tail = dictionary->tail;
-    free(dictionary);
-    dict_free(tail);
+    if (dictionary->tail != NULL)
+    {
+        dict_free(dictionary->tail);
+    }
+    else
+    {
+        free(dictionary);
+    }
 }

@@ -9,14 +9,6 @@ char *layer_registry_get_node_id(Layer *layer)
 {
     PebbleDictionary *temp = layersDict;
 
-    if (temp == NULL)
-    {
-        return 0;
-    }
-    if (temp->head == NULL)
-    {
-        return 0;
-    }
     while (temp != NULL)
     {
         if (temp->head->value == layer)
@@ -53,25 +45,21 @@ void set_layer_frame_from_props(Layer *layer, PebbleDictionary *propsDict)
 
     if (dict_has(propsDict, "top"))
     {
-        uint16_t top = atoi((char *)dict_get(propsDict, "top"));
-        frame.origin.y = top;
+        frame.origin.y = atoi((char *)dict_get(propsDict, "top"));
     }
     if (dict_has(propsDict, "left"))
     {
-        uint16_t left = atoi((char *)dict_get(propsDict, "left"));
-        frame.origin.x = left;
+        frame.origin.x = atoi((char *)dict_get(propsDict, "left"));
     }
     if (dict_has(propsDict, "width"))
     {
-        uint16_t width = atoi((char *)dict_get(propsDict, "width"));
-        frame.size.w = width;
+        frame.size.w = atoi((char *)dict_get(propsDict, "width"));
     }
     if (dict_has(propsDict, "height"))
     {
-        uint16_t height = atoi((char *)dict_get(propsDict, "height"));
-        frame.size.h = height;
+        frame.size.h = atoi((char *)dict_get(propsDict, "height"));
     }
-    layer_set_frame(layer, GRect(frame.origin.x, frame.origin.y, frame.size.w, frame.size.h));
+    layer_set_frame(layer, frame);
 }
 
 GRect get_layer_frame_from_props(PebbleDictionary *propsDict)
@@ -97,6 +85,11 @@ int layer_registry_has(const char *nodeId)
 void *layer_registry_get_reconciler(Layer *layer)
 {
     return hash_get(reconcilersHashMap, layer);
+}
+
+void layer_registry_remove_reconciler(Layer *layer)
+{
+    hash_remove(reconcilersHashMap, layer);
 }
 
 void layer_registry_add(const char *nodeId, Layer *layer)

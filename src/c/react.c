@@ -38,7 +38,7 @@ void parsePropsJSONObject(JSP_ValueType type, char *label, uint16_t label_length
   if (strcmp(type_labels[type], "JSP_VALUE_STRING") == 0)
   {
     char *s = calloc(value_length - 1, sizeof(char));
-    snprintf(s, value_length + 1, "%s", substr(v, 1, value_length - 1));
+    snprintf(s, value_length - 1, "%s", substr(v, 1, value_length - 1));
     dict_add(propsDict, l, s);
     free(v);
   }
@@ -76,9 +76,12 @@ static void handleOperation()
 
     const char *propsJSON = dict_get(operationDict, "props");
 
-    json_register_callbacks(parsePropsJSONObject, NULL);
+    APP_LOG(APP_LOG_LEVEL_INFO, "before parse props json %d", heap_bytes_used());
 
+    json_register_callbacks(parsePropsJSONObject, NULL);
     json_parser(propsJSON);
+
+    APP_LOG(APP_LOG_LEVEL_INFO, "after parse props json %d", heap_bytes_used());
   }
 
   Layer *window_layer = window_get_root_layer(s_window);
@@ -92,8 +95,6 @@ static void handleOperation()
 
   // Restore because reconcilers might have changed it
   json_register_callbacks(parsePropsJSONObject, NULL);
-
-  // dict_free(propsDict);
 }
 
 void parseBatchOperationsJSONObject(JSP_ValueType type, char *label, uint16_t label_length, char *value, uint16_t value_length)
@@ -113,7 +114,7 @@ void parseBatchOperationsJSONObject(JSP_ValueType type, char *label, uint16_t la
   else
   {
     char *s = calloc(value_length - 1, sizeof(char));
-    snprintf(s, value_length + 1, "%s", substr(v, 1, value_length - 1));
+    snprintf(s, value_length - 1, "%s", substr(v, 1, value_length - 1));
     dict_add(operationDict, l, s);
     free(v);
   }
@@ -188,7 +189,9 @@ static void handleMessageReceived(DictionaryIterator *received, void *context)
 
       if (error == JSP_OK)
       {
+        APP_LOG(APP_LOG_LEVEL_INFO, "before operation we use %d", heap_bytes_used());
         handleOperation();
+        APP_LOG(APP_LOG_LEVEL_INFO, "after operation we use %d", heap_bytes_used());
       }
 
       dict_free(operationDict);
@@ -245,6 +248,8 @@ static void prv_init(void)
   text_layer_reconciler_init();
   image_layer_reconciler_init();
   animation_reconciler_init();
+
+  APP_LOG(APP_LOG_LEVEL_INFO, "after prv_init we use %d", heap_bytes_used());
 }
 
 static void prv_deinit(void)
@@ -252,6 +257,7 @@ static void prv_deinit(void)
   text_layer_reconciler_deinit();
   image_layer_reconciler_deinit();
   animation_reconciler_deinit();
+
   layer_registry_deinit();
 
   window_destroy(s_window);
@@ -259,6 +265,7 @@ static void prv_deinit(void)
 
 int main(void)
 {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Currently using %d", heap_bytes_used());
   prv_init();
   app_event_loop();
   prv_deinit();

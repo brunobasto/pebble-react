@@ -62,32 +62,37 @@ void hash_remove(PebbleHashMap *hashmap, void *key)
 {
     if (hashmap->head == NULL)
         return;
+
     PebbleHashMap *previous = NULL;
+
     while (hashmap != NULL)
     {
         if (hashmap->head->key == key)
         {
-            if (previous == NULL)
+            if (previous != NULL)
             {
-                // free(hashmap->head->key);
-                hashmap->head->key = NULL;
-                if (hashmap->tail != NULL)
-                {
-                    PebbleHashMap *toremove = hashmap->tail;
-                    hashmap->head->key = toremove->head->key;
-                    hashmap->tail = toremove->tail;
-                    free(toremove->head);
-                    free(toremove);
-                    return;
-                }
+                previous->tail = hashmap->tail;
+                free(hashmap->head);
+                hashmap->head = NULL;
+                free(hashmap);
             }
             else
             {
-                previous->tail = hashmap->tail;
+                if (hashmap->tail != NULL)
+                {
+                    PebbleHashMap *next = hashmap->tail;
+                    free(hashmap->head);
+                    hashmap->head = next->head;
+                    hashmap->tail = next->tail;
+                    free(next);
+                }
+                else
+                {
+                    free(hashmap->head);
+                    hashmap->head = NULL;
+                }
             }
-            // free(hashmap->head->key);
-            free(hashmap->head);
-            free(hashmap);
+
             return;
         }
         previous = hashmap;
@@ -99,10 +104,11 @@ void hash_free(PebbleHashMap *hashmap)
 {
     if (hashmap == NULL)
         return;
-    free(hashmap->head->key);
-    free(hashmap->head->value);
-    free(hashmap->head);
-    PebbleHashMap *tail = hashmap->tail;
+    if (hashmap->head != NULL) {
+        free(hashmap->head);
+    }
+    if (hashmap->tail != NULL) {
+        hash_free(hashmap->tail);
+    }
     free(hashmap);
-    hash_free(tail);
 }

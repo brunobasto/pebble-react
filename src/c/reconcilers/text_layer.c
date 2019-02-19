@@ -35,8 +35,6 @@ static void setupInitialProps(const char *nodeId, PebbleDictionary *propsDict)
   {
     dict_add(propsDict, "color", &GColorWhite);
   }
-
-  dict_add(layerPropsDict, nodeId, propsDict);
 }
 
 static void handleCanvasUpdate(Layer *layer, GContext *ctx)
@@ -89,12 +87,11 @@ static void appendChild(
   layer_registry_add_reconciler(layer, commitUpdate);
   layer_add_child(parentLayer, layer);
   layer_set_update_proc(layer, handleCanvasUpdate);
+  dict_add(layerPropsDict, nodeId, propsDict);
 }
 
 static void removeChild(const char *nodeId)
 {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "removing %s", nodeId);
-
   if (layer_registry_has(nodeId))
   {
     Layer *layer = layer_registry_get(nodeId);
@@ -103,12 +100,30 @@ static void removeChild(const char *nodeId)
 
     layer_remove_child_layers(layer);
     layer_remove_from_parent(layer);
+    layer_registry_remove_reconciler(layer);
+    layer_registry_remove(nodeId);
+
+    // char *testkey = "test";
+    // APP_LOG(APP_LOG_LEVEL_INFO, "before adding to dict %d", heap_bytes_used());
+    // layer_registry_add(testkey, layer);
+    // APP_LOG(APP_LOG_LEVEL_INFO, "before dict_has %d", heap_bytes_used());
+    // layer_registry_has(testkey);
+    // APP_LOG(APP_LOG_LEVEL_INFO, "after dict_has to dict %d", heap_bytes_used());
+    // layer_registry_remove(testkey);
+    // APP_LOG(APP_LOG_LEVEL_INFO, "after removing from dict %d", heap_bytes_used());
 
     layer_destroy(layer);
-
-    layer_registry_remove(nodeId);
   }
 
+  PebbleDictionary *cachedProps = (PebbleDictionary *)dict_get(layerPropsDict, nodeId);
+  dict_remove(cachedProps, "alignment");
+  dict_remove(cachedProps, "children");
+  dict_remove(cachedProps, "color");
+  dict_remove(cachedProps, "height");
+  dict_remove(cachedProps, "left");
+  dict_remove(cachedProps, "top");
+  dict_remove(cachedProps, "width");
+  dict_free(cachedProps);
   dict_remove(layerPropsDict, nodeId);
 }
 
