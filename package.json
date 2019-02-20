@@ -63,7 +63,7 @@
     },
     "messageKeys": [
       "batchOperations",
-      "batchOperationsSize"
+      "batchOperationsLength"
     ],
     "resources": {
       "media": [

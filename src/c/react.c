@@ -1,11 +1,15 @@
 #include <pebble.h>
 
+// Tests
+#include "./runtime_tests/memory.h"
+
 // Libs
 #include "./lib/json/jsonparser.h"
 #include "./lib/dictionary/dictionary.h"
 
 // Utils
 #include "./utils/string.h"
+#include "./utils/json_utils.h"
 
 // Reconcilers
 #include "./reconcilers/animation.h"
@@ -17,43 +21,10 @@ AppTimer *timer;
 
 static Window *s_window;
 
-PebbleDictionary *operationDict;
-PebbleDictionary *propsDict;
-
-#define MAX_BATCH_OPERATIONS 100
-// TODO - do it dynamically
-char *batchOperations[MAX_BATCH_OPERATIONS];
-uint16_t batchOperationsCounter = 0;
-
-static char *type_labels[] = {"JSP_VALUE_UNKNOWN", "JSP_VALUE_STRING", "JSP_VALUE_OBJECT", "JSP_VALUE_ARRAY", "JSP_VALUE_PRIMITIVE"};
-
-void parsePropsJSONObject(JSP_ValueType type, char *label, uint16_t label_length, char *value, uint16_t value_length)
+static void handleOperation(PebbleDictionary *operationDict)
 {
-  char *l = calloc(label_length + 1, sizeof(char));
-  char *v = calloc(value_length + 1, sizeof(char));
-
-  snprintf(l, label_length + 1, "%s", label);
-  snprintf(v, value_length + 1, "%s", value);
-
-  if (strcmp(type_labels[type], "JSP_VALUE_STRING") == 0)
+  if (dict_has(operationDict, "operation") != 1)
   {
-    char *s = calloc(value_length - 1, sizeof(char));
-    snprintf(s, value_length - 1, "%s", substr(v, 1, value_length - 1));
-    dict_add(propsDict, l, s);
-    free(v);
-  }
-  else
-  {
-    // APP_LOG(APP_LOG_LEVEL_INFO, "added non string prop %s: %s", l, v);
-    dict_add(propsDict, l, v);
-  }
-
-  free(l);
-}
-
-static void handleOperation()
-{
-  if (dict_has(operationDict, "operation") != 1) {
     return;
   }
 
@@ -68,18 +39,17 @@ static void handleOperation()
   const char *nodeId = dict_get(operationDict, "nodeId");
 
   // Props
-  propsDict = NULL;
+  PebbleDictionary *propsDict = NULL;
 
   if (dict_has(operationDict, "props"))
   {
     propsDict = dict_new();
 
-    const char *propsJSON = dict_get(operationDict, "props");
+    char *propsJSON = dict_get(operationDict, "props");
 
     APP_LOG(APP_LOG_LEVEL_INFO, "before parse props json %d", heap_bytes_used());
 
-    json_register_callbacks(parsePropsJSONObject, NULL);
-    json_parser(propsJSON);
+    json_utils_parse_object_to_dict(propsJSON, propsDict);
 
     APP_LOG(APP_LOG_LEVEL_INFO, "after parse props json %d", heap_bytes_used());
   }
@@ -90,48 +60,6 @@ static void handleOperation()
   text_layer_reconciler(window_layer, operation, nodeType, nodeId, propsDict);
   image_layer_reconciler(window_layer, operation, nodeType, nodeId, propsDict);
   animation_reconciler(window_layer, operation, nodeType, nodeId, propsDict);
-
-  // APP_LOG(APP_LOG_LEVEL_INFO, "did all reconcilers %d", nodeType);
-
-  // Restore because reconcilers might have changed it
-  json_register_callbacks(parsePropsJSONObject, NULL);
-}
-
-void parseBatchOperationsJSONObject(JSP_ValueType type, char *label, uint16_t label_length, char *value, uint16_t value_length)
-{
-  char *l = calloc(label_length + 1, sizeof(char));
-  char *v = calloc(value_length + 1, sizeof(char));
-
-  snprintf(l, label_length + 1, "%s", label);
-  snprintf(v, value_length + 1, "%s", value);
-
-  // APP_LOG(APP_LOG_LEVEL_INFO, "type of object value(%s, %s, %s)", type_labels[type], l, v);
-
-  if (strcmp(type_labels[type], "JSP_VALUE_OBJECT") == 0)
-  {
-    dict_add(operationDict, l, v);
-  }
-  else
-  {
-    char *s = calloc(value_length - 1, sizeof(char));
-    snprintf(s, value_length - 1, "%s", substr(v, 1, value_length - 1));
-    dict_add(operationDict, l, s);
-    free(v);
-  }
-
-  free(l);
-}
-
-void parseBatchOperationsJSONArray(JSP_ValueType type, char *value, uint16_t value_length)
-{
-  char *v = calloc(value_length + 1, sizeof(char));
-  snprintf(v, value_length + 1, "%s", value);
-
-  if (strcmp(type_labels[type], "JSP_VALUE_OBJECT") == 0)
-  {
-    // APP_LOG(APP_LOG_LEVEL_INFO, "batch(%s)", v);
-    batchOperations[batchOperationsCounter++] = v;
-  }
 }
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *context)
@@ -175,31 +103,32 @@ static void handleMessageReceived(DictionaryIterator *received, void *context)
   {
     char *batchOperationsJSON = tuple->value->cstring;
 
-    json_register_callbacks(NULL, parseBatchOperationsJSONArray);
+    tuple = dict_find(received, MESSAGE_KEY_batchOperationsLength);
 
-    json_parser(batchOperationsJSON);
+    uint16_t batchOperationsLength = tuple->value->uint16;
 
-    for (uint16_t i = 0; i < batchOperationsCounter; i++)
+    char **batchOperations = calloc(batchOperationsLength, sizeof(char *));
+
+    json_utils_parse_array_to_array(batchOperationsJSON, batchOperations);
+
+    for (uint16_t i = 0; i < batchOperationsLength; i++)
     {
-      operationDict = dict_new();
+      PebbleDictionary *operationDict = dict_new();
 
-      json_register_callbacks(parseBatchOperationsJSONObject, NULL);
+      json_utils_parse_object_to_dict(batchOperations[i], operationDict);
 
-      JSP_ErrorType error = json_parser(batchOperations[i]);
+      APP_LOG(APP_LOG_LEVEL_INFO, "before operation we use %d", heap_bytes_used());
 
-      if (error == JSP_OK)
-      {
-        APP_LOG(APP_LOG_LEVEL_INFO, "before operation we use %d", heap_bytes_used());
-        handleOperation();
-        APP_LOG(APP_LOG_LEVEL_INFO, "after operation we use %d", heap_bytes_used());
-      }
+      handleOperation(operationDict);
+
+      APP_LOG(APP_LOG_LEVEL_INFO, "after operation we use %d", heap_bytes_used());
 
       dict_free(operationDict);
 
       free(batchOperations[i]);
     }
 
-    batchOperationsCounter = 0;
+    free(batchOperations);
   }
 }
 
@@ -265,6 +194,11 @@ static void prv_deinit(void)
 
 int main(void)
 {
+  // assert_dict_add_remove();
+  // assert_dict_new_free();
+  // assert_json_object_parse();
+  // assert_json_array_parse();
+  // assert_substr();
   APP_LOG(APP_LOG_LEVEL_INFO, "Currently using %d", heap_bytes_used());
   prv_init();
   app_event_loop();

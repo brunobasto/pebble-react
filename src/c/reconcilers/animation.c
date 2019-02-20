@@ -1,88 +1,31 @@
 #include "animation.h"
 
 #include "../lib/hashmap/hashmap.h"
-#include "../lib/json/jsonparser.h"
+#include "../utils/json_utils.h"
 #include "../utils/layer_props_utils.h"
 #include "../utils/layers_registry.h"
 #include "../utils/string.h"
 
+typedef struct AnimationInfo_t
+{
+  uint16_t *childrenLength;
+  char **children;
+  PebbleDictionary *props;
+} AnimationInfo;
+
 static PebbleDictionary *animationsRegistry;
 static PebbleDictionary *animationsLengthRegistry;
 
-static PebbleHashMap *animationsPropsHashMap;
-static PebbleHashMap *animationsChildrenHashMap;
-static PebbleHashMap *animationsChildrenLengthHashMap;
-
-static uint16_t currentChildrenIndex = 0;
-static uint16_t currentAnimationPropsIndex = 0;
-
-static char **currentAnimationChildren;
-static PebbleDictionary **currentAnimationPropsArray;
+static PebbleHashMap *animationsInfoHashMap;
 
 typedef void (*ReconcilerCall)(char *nodeId, PebbleDictionary *props);
 
 static ReconcilerCall callReconciler = NULL;
 
-static char *type_labels[] = {"JSP_VALUE_UNKNOWN", "JSP_VALUE_STRING", "JSP_VALUE_OBJECT", "JSP_VALUE_ARRAY", "JSP_VALUE_PRIMITIVE"};
-
 static void handleAnimationUpdate(Animation *animation, const AnimationProgress progress);
 static void handleAnimationTeardown(Animation *animation);
 
 static AnimationImplementation impl = {.update = handleAnimationUpdate, .teardown = handleAnimationTeardown};
-
-static void parseAnimationPropEntryJSONObject(JSP_ValueType type, char *label, uint16_t label_length, char *value, uint16_t value_length)
-{
-  char *l = calloc(label_length + 1, sizeof(char));
-  char *v = calloc(value_length + 1, sizeof(char));
-
-  snprintf(l, label_length + 1, "%s", label);
-  snprintf(v, value_length + 1, "%s", value);
-
-  if (strcmp(type_labels[type], "JSP_VALUE_STRING") == 0)
-  {
-    char *s = calloc(value_length - 1, sizeof(char));
-    snprintf(s, value_length + 1, "%s", substr(v, 1, value_length - 1));
-
-    dict_add(currentAnimationPropsArray[currentAnimationPropsIndex], l, s);
-  }
-
-  free(v);
-  free(l);
-}
-
-static void parseAnimationChildrenJSONArray(JSP_ValueType type, char *value, uint16_t value_length)
-{
-  if (strcmp(type_labels[type], "JSP_VALUE_STRING") == 0)
-  {
-    char *v = calloc(value_length + 1, sizeof(char));
-    currentAnimationChildren[currentChildrenIndex] = calloc(value_length + 1, sizeof(char));
-
-    snprintf(v, value_length + 1, "%s", value);
-    snprintf(currentAnimationChildren[currentChildrenIndex], value_length + 1, "%s", substr(v, 1, value_length - 1));
-
-    currentChildrenIndex++;
-
-    free(v);
-  }
-}
-
-static void parseAnimationPropsJSONArray(JSP_ValueType type, char *value, uint16_t value_length)
-{
-  if (strcmp(type_labels[type], "JSP_VALUE_OBJECT") == 0)
-  {
-    char *v = calloc(value_length + 1, sizeof(char));
-    snprintf(v, value_length + 1, "%s", value);
-
-    currentAnimationPropsArray[currentAnimationPropsIndex] = malloc(sizeof(PebbleDictionary *));
-    currentAnimationPropsArray[currentAnimationPropsIndex] = dict_new();
-
-    json_register_callbacks(parseAnimationPropEntryJSONObject, NULL);
-    json_parser(v);
-    json_register_callbacks(NULL, parseAnimationPropsJSONArray);
-    currentAnimationPropsIndex++;
-    free(v);
-  }
-}
 
 static void setAnimationProperties(Animation *animation, PebbleDictionary *props)
 {
@@ -104,14 +47,12 @@ static void setAnimationProperties(Animation *animation, PebbleDictionary *props
 static char **getAnimationChildren(PebbleDictionary *props, uint16_t *childrenLength)
 {
   // Create the array to hold the values
-  currentAnimationChildren = malloc(*childrenLength * sizeof(char *));
+  char **children = malloc(*childrenLength * sizeof(char *));
 
   // Parse JSON
-  currentChildrenIndex = 0;
-  json_register_callbacks(NULL, parseAnimationChildrenJSONArray);
-  json_parser((char *)dict_get(props, "children"));
+  json_utils_parse_array_to_array((char *)dict_get(props, "children"), children);
 
-  return currentAnimationChildren;
+  return children;
 }
 
 static Animation **registerAnimations(
@@ -119,17 +60,12 @@ static Animation **registerAnimations(
     PebbleDictionary *props,
     uint16_t animationsLength)
 {
-  // Create the array to hold the values
-  currentAnimationPropsIndex = 0;
-  currentAnimationPropsArray = malloc(animationsLength * sizeof(PebbleDictionary *));
-
-  // APP_LOG(APP_LOG_LEVEL_INFO, "gonna parse anim props %s", (char *)dict_get(props, "animationProps"));
+  // Create the arrays to hold the values
+  char **animationPropsJSONArray = malloc(animationsLength * sizeof(PebbleDictionary *));
+  Animation **animations = malloc(animationsLength * sizeof(Animation *));
 
   // Parse JSON
-  json_register_callbacks(NULL, parseAnimationPropsJSONArray);
-  json_parser((char *)dict_get(props, "animationProps"));
-
-  Animation **animations = malloc(animationsLength * sizeof(Animation *));
+  json_utils_parse_array_to_array((char *)dict_get(props, "animationProps"), animationPropsJSONArray);
 
   uint16_t *childrenLength = malloc(sizeof(uint16_t));
   *childrenLength = atoi((char *)dict_get(props, "childrenLength"));
@@ -139,14 +75,22 @@ static Animation **registerAnimations(
     Animation *animation = animation_create();
     // Setup
     setAnimationProperties(animation, props);
+    // Create animation props dict
+    PebbleDictionary *animationProps = dict_new();
+    json_utils_parse_object_to_dict(animationPropsJSONArray[i], animationProps);
+    free(animationPropsJSONArray[i]);
     // Props
-    hash_add(animationsPropsHashMap, animation, currentAnimationPropsArray[i]);
-    // Children
-    hash_add(animationsChildrenHashMap, animation, getAnimationChildren(props, childrenLength));
-    hash_add(animationsChildrenLengthHashMap, animation, childrenLength);
+    AnimationInfo *info = malloc(sizeof(AnimationInfo));
+    info->childrenLength = childrenLength;
+    info->children = getAnimationChildren(props, childrenLength);
+    info->props = animationProps;
+    // Save hashmap
+    hash_add(animationsInfoHashMap, animation, info);
     // Add to array
     animations[i] = animation;
   }
+
+  free(animationPropsJSONArray);
 
   return animations;
 }
@@ -173,15 +117,16 @@ static void handleAnimationTeardown(Animation *animation)
 
 static void handleAnimationUpdate(Animation *animation, const AnimationProgress progress)
 {
-  if (animation == NULL || !animation_is_scheduled(animation) || !hash_has(animationsChildrenHashMap, animation))
+  if (animation == NULL || !animation_is_scheduled(animation) || !hash_has(animationsInfoHashMap, animation))
   {
     return;
   }
 
-  PebbleDictionary *animationProps = (PebbleDictionary *)hash_get(animationsPropsHashMap, animation);
+  AnimationInfo *animationInfo = (AnimationInfo *)hash_get(animationsInfoHashMap, animation);
 
-  char **animationChildren = (char **)hash_get(animationsChildrenHashMap, animation);
-  uint16_t *animationChildrenLength = (uint16_t *)hash_get(animationsChildrenLengthHashMap, animation);
+  char **animationChildren = animationInfo->children;
+  uint16_t *animationChildrenLength = animationInfo->childrenLength;
+  PebbleDictionary *animationProps = animationInfo->props;
 
   char *propName = (char *)dict_get(animationProps, "name");
 
@@ -302,9 +247,7 @@ void animation_reconciler_init()
   animationsRegistry = dict_new();
   animationsLengthRegistry = dict_new();
 
-  animationsChildrenHashMap = hash_new();
-  animationsChildrenLengthHashMap = hash_new();
-  animationsPropsHashMap = hash_new();
+  animationsInfoHashMap = hash_new();
 }
 
 void animation_reconciler_deinit()
@@ -314,9 +257,7 @@ void animation_reconciler_deinit()
   dict_free(animationsRegistry);
   dict_free(animationsLengthRegistry);
 
-  hash_free(animationsChildrenHashMap);
-  hash_free(animationsChildrenLengthHashMap);
-  hash_free(animationsPropsHashMap);
+  hash_free(animationsInfoHashMap);
 }
 
 void animation_reconciler(

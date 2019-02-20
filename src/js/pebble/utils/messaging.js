@@ -53,7 +53,7 @@ export const flushMessages = async () => {
         Pebble.sendAppMessage(
             {
                 batchOperations: operations,
-                batchOperationsSize: queue.length
+                batchOperationsLength: queue.length
             },
             () => {
                 busy = false;

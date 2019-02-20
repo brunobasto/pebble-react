@@ -68,7 +68,7 @@ static void commitUpdate(
 {
   // Merge newProps with cachedProps
   PebbleDictionary *cachedProps = (PebbleDictionary *)dict_get(layerPropsDict, nodeId);
-  layer_props__utils_merge_props(cachedProps, newProps);
+  layer_props_utils_merge_props(cachedProps, newProps);
 
   Layer *layer = layer_registry_get(nodeId);
   layer_props_utils_set_frame_from_props(layer, cachedProps);
@@ -80,7 +80,6 @@ static void appendChild(
     PebbleDictionary *propsDict)
 {
   setupInitialProps(nodeId, propsDict);
-
   GRect frame = layer_props_utils_get_frame_from_props(propsDict);
   Layer *layer = layer_create(frame);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "adding %p to %s", layer, nodeId);
