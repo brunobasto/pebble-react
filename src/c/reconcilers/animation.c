@@ -1,9 +1,10 @@
 #include "animation.h"
 
-#include "../lib/pebble-c-jsonparser/jsonparser.h"
 #include "../lib/hashmap/hashmap.h"
+#include "../lib/json/jsonparser.h"
+#include "../utils/layer_props_utils.h"
+#include "../utils/layers_registry.h"
 #include "../utils/string.h"
-#include "utils/layer_reconciler_utils.h"
 
 static PebbleDictionary *animationsRegistry;
 static PebbleDictionary *animationsLengthRegistry;
@@ -211,6 +212,7 @@ static void handleAnimationUpdate(Animation *animation, const AnimationProgress 
     callReconciler(nodeId, props);
   }
   free(v);
+  dict_remove(props, propName);
   dict_free(props);
 }
 

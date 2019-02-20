@@ -1,17 +1,17 @@
 #include <pebble.h>
 
 // Libs
-#include "./lib/pebble-c-jsonparser/jsonparser.h"
+#include "./lib/json/jsonparser.h"
 #include "./lib/dictionary/dictionary.h"
 
 // Utils
 #include "./utils/string.h"
 
 // Reconcilers
-#include "./reconcilers/text_layer.h"
-#include "./reconcilers/image_layer.h"
 #include "./reconcilers/animation.h"
-#include "./reconcilers/utils/layer_reconciler_utils.h"
+#include "./reconcilers/image_layer.h"
+#include "./reconcilers/text_layer.h"
+#include "./utils/layers_registry.h"
 
 AppTimer *timer;
 
@@ -25,7 +25,7 @@ PebbleDictionary *propsDict;
 char *batchOperations[MAX_BATCH_OPERATIONS];
 uint16_t batchOperationsCounter = 0;
 
-char *type_labels[] = {"JSP_VALUE_UNKNOWN", "JSP_VALUE_STRING", "JSP_VALUE_OBJECT", "JSP_VALUE_ARRAY", "JSP_VALUE_PRIMITIVE"};
+static char *type_labels[] = {"JSP_VALUE_UNKNOWN", "JSP_VALUE_STRING", "JSP_VALUE_OBJECT", "JSP_VALUE_ARRAY", "JSP_VALUE_PRIMITIVE"};
 
 void parsePropsJSONObject(JSP_ValueType type, char *label, uint16_t label_length, char *value, uint16_t value_length)
 {

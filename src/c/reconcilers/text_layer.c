@@ -1,5 +1,6 @@
 #include "text_layer.h"
-#include "utils/layer_reconciler_utils.h"
+#include "../utils/layer_props_utils.h"
+#include "../utils/layers_registry.h"
 
 static PebbleDictionary *layerPropsDict;
 
@@ -67,10 +68,10 @@ static void commitUpdate(
 {
   // Merge newProps with cachedProps
   PebbleDictionary *cachedProps = (PebbleDictionary *)dict_get(layerPropsDict, nodeId);
-  layer_utils_merge_props(cachedProps, newProps);
+  layer_props__utils_merge_props(cachedProps, newProps);
 
   Layer *layer = layer_registry_get(nodeId);
-  set_layer_frame_from_props(layer, cachedProps);
+  layer_props_utils_set_frame_from_props(layer, cachedProps);
 }
 
 static void appendChild(
@@ -80,7 +81,7 @@ static void appendChild(
 {
   setupInitialProps(nodeId, propsDict);
 
-  GRect frame = get_layer_frame_from_props(propsDict);
+  GRect frame = layer_props_utils_get_frame_from_props(propsDict);
   Layer *layer = layer_create(frame);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "adding %p to %s", layer, nodeId);
   layer_registry_add(nodeId, layer);
@@ -102,15 +103,6 @@ static void removeChild(const char *nodeId)
     layer_remove_from_parent(layer);
     layer_registry_remove_reconciler(layer);
     layer_registry_remove(nodeId);
-
-    // char *testkey = "test";
-    // APP_LOG(APP_LOG_LEVEL_INFO, "before adding to dict %d", heap_bytes_used());
-    // layer_registry_add(testkey, layer);
-    // APP_LOG(APP_LOG_LEVEL_INFO, "before dict_has %d", heap_bytes_used());
-    // layer_registry_has(testkey);
-    // APP_LOG(APP_LOG_LEVEL_INFO, "after dict_has to dict %d", heap_bytes_used());
-    // layer_registry_remove(testkey);
-    // APP_LOG(APP_LOG_LEVEL_INFO, "after removing from dict %d", heap_bytes_used());
 
     layer_destroy(layer);
   }
