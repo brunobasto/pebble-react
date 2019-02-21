@@ -3,6 +3,9 @@
 #include "../utils/string.h"
 #include "../utils/json_utils.h"
 
+#include "../reconcilers/constants.h"
+#include "../reconcilers/text_layer.h"
+
 static void logResult(const char *name, int before, int after)
 {
     if (after > before)
@@ -42,31 +45,6 @@ void assert_dict_new_free()
     logResult("assert_dict_new_free", usedBefore, heap_bytes_used());
 }
 
-static char *type_labels[] = {"JSP_VALUE_UNKNOWN", "JSP_VALUE_STRING", "JSP_VALUE_OBJECT", "JSP_VALUE_ARRAY", "JSP_VALUE_PRIMITIVE"};
-
-// PebbleDictionary *jsonProps;
-
-// static void parsePropsJSONObject(JSP_ValueType type, char *label, uint16_t label_length, char *value, uint16_t value_length)
-// {
-//     char *l = calloc(label_length + 1, sizeof(char));
-//     char *v = calloc(value_length + 1, sizeof(char));
-
-//     snprintf(l, label_length + 1, "%s", label);
-//     snprintf(v, value_length + 1, "%s", value);
-
-//     if (strcmp(type_labels[type], "JSP_VALUE_STRING") == 0)
-//     {
-//         char *s = calloc(value_length - 1, sizeof(char));
-//         char *sub = substr(v, 1, value_length - 1);
-//         snprintf(s, value_length - 1, "%s", sub);
-//         free(sub);
-//         dict_add(jsonProps, l, s);
-//     }
-
-//     free(v);
-//     free(l);
-// }
-
 void assert_substr() {
     const char *v = "-this is a quite long string-";
     uint16_t length = strlen(v);
@@ -103,4 +81,33 @@ void assert_json_array_parse()
     free(array[1]);
     logResult("assert_json_array_parse", usedBefore, heap_bytes_used());
     free(array);
+}
+
+void assert_text_reconciler_init_deinit()
+{
+    int usedBefore = heap_bytes_used();
+    text_layer_reconciler_init();
+    text_layer_reconciler_deinit();
+    logResult("assert_text_reconciler_init_deinit", usedBefore, heap_bytes_used());
+}
+
+void assert_text_reconciler_add_remove(Layer *parentLayer)
+{
+    text_layer_reconciler_init();
+    TextLayerPropsMessage textLayerProps = TextLayerPropsMessage_init_default;
+    int usedBefore = heap_bytes_used();
+    text_layer_reconciler(parentLayer, OPERATION_APPEND_CHILD, NODE_TYPE_TEXT_LAYER, "test", &textLayerProps);
+    text_layer_reconciler(parentLayer, OPERATION_REMOVE_CHILD, NODE_TYPE_TEXT_LAYER, "test", NULL);
+    logResult("assert_text_reconciler_add_remove", usedBefore, heap_bytes_used());
+    text_layer_reconciler_deinit();
+}
+
+void assert_text_reconciler_remove_leftovers(Layer *parentLayer)
+{
+    TextLayerPropsMessage textLayerProps = TextLayerPropsMessage_init_default;
+    int usedBefore = heap_bytes_used();
+    text_layer_reconciler_init();
+    text_layer_reconciler(parentLayer, OPERATION_APPEND_CHILD, NODE_TYPE_TEXT_LAYER, "test", &textLayerProps);
+    text_layer_reconciler_deinit();
+    logResult("assert_text_reconciler_remove_leftovers", usedBefore, heap_bytes_used());
 }
