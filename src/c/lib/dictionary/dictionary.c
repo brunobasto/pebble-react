@@ -2,6 +2,10 @@
 
 #include "dictionary.h"
 
+typedef void (*DictForeachCall)(char *key, void *value);
+
+static DictForeachCall callDictForeach = NULL;
+
 PebbleDictionary *dict_new()
 {
     PebbleDictionary *dictionary = (PebbleDictionary *)malloc(sizeof(PebbleDictionary));
@@ -36,6 +40,22 @@ void dict_add(PebbleDictionary *dictionary, const char *key, void *value)
     dictionary->head->key = (char *)malloc((strlen(key) + 1) * sizeof(char));
     strcpy(dictionary->head->key, key);
     dictionary->head->value = value;
+}
+
+void dict_foreach(PebbleDictionary *dictionary, void *callback) {
+    if (dictionary == NULL)
+        return;
+    if (dictionary->head == NULL)
+        return;
+    while (dictionary != NULL)
+    {
+        if (dictionary->head->key != NULL) {
+            callDictForeach = callback;
+            callDictForeach(dictionary->head->key, dictionary->head->value);
+        }
+
+        dictionary = dictionary->tail;
+    }
 }
 
 int dict_has(PebbleDictionary *dictionary, const char *key)

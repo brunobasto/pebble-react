@@ -16,3 +16,4 @@ int dict_has(PebbleDictionary *dictionary, const char *key);
 void * dict_get(PebbleDictionary *dictionary, const char *key);
 void dict_remove(PebbleDictionary *dictionary, const char *key);
 void dict_free(PebbleDictionary *dictionary);
+void dict_foreach(PebbleDictionary *dictionary, void* callback);
