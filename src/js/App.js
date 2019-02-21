@@ -1,10 +1,20 @@
 import React, { Component } from 'react';
 
 class App extends Component {
+    state = {what: 'React'};
+
+    componentDidMount() {
+        Pebble.addEventListener("appmessage", (e) => {
+            this.setState({what: 'Pebble'});
+        });
+    }
+
     render() {
+        const {what} = this.state;
+
         return (
             <window name="some">
-                {'React'.split('').map((letter, index) => (
+                {what.split('').map((letter, index) => (
                     <animation
                         animationProps={{
                             top: {
@@ -12,7 +22,7 @@ class App extends Component {
                                 end: 50
                             }
                         }}
-                        duration={2000}
+                        duration={750}
                     >
                         <text
                             height={30}
@@ -32,7 +42,7 @@ class App extends Component {
                                 end: (index * 30)
                             }
                         }}
-                        duration={3000}
+                        duration={1500}
                     >
                         <text
                             height={30}
