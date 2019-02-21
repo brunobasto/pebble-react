@@ -1,0 +1,4 @@
+- Change operations message to a dynamic array
+- Change string props to be dynamic length strings for better memory usage
+- Convert refactor Animation to use protobuf
+- Click should send a protobuf operation
