@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+import "nanopb.proto";
+
+message TextLayerPropsMessage {
+   string alignment = 1 [(nanopb).max_size = 10];
+   uint32 height = 2 [(nanopb).int_size = IS_8];
+   int32 left = 3 [(nanopb).int_size = IS_16];
+   string text = 4 [(nanopb).max_size = 10];
+   int32 top = 5 [(nanopb).int_size = IS_16];
+   uint32 width = 6 [(nanopb).int_size = IS_8];
+
+   bool alignmentChanged = 7;
+   bool heightChanged = 8;
+   bool leftChanged = 9;
+   bool textChanged = 10;
+   bool topChanged = 11;
+   bool widthChanged = 12;
+}
+
+// message ImageLayerPropsMessage {
+//    uint32 top = 2;
+//    uint32 left = 3;
+//    uint32 height = 4;
+//    uint32 width = 5;
+// }
+
+message OperationMessage {
+   uint32 operation = 1 [(nanopb).int_size = IS_8];
+   uint32 nodeType = 2 [(nanopb).int_size = IS_8];
+   string nodeId = 3 [(nanopb).max_size = 5];
+   TextLayerPropsMessage textLayerProps = 4;
+}
+
+message BatchOperationsMessage {
+   repeated OperationMessage operations = 1 [(nanopb).max_count = 2];
+}

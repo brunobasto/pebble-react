@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "babel-polyfill": "^6.26.0",
+    "protobufjs": "^6.8.8",
     "react": "^16.3.2",
     "react-reconciler": "^0.20.0"
   },
@@ -25,7 +26,10 @@
     "compile": "npm run build && pebble build",
     "build": "webpack --config webpack.react.config.js",
     "emulator": "npm run compile && pebble install --emulator basalt --logs",
-    "phone": "npm run compile && pebble install --phone 192.168.15.6 --logs"
+    "phone": "npm run compile && pebble install --phone 192.168.15.6 --logs",
+    "protojs": "pbjs -t json src/protobuf/BatchOperationsMessage.proto > src/js/proto.json",
+    "protoc": "protoc --plugin=protoc-gen-nanopb=~/DevApps/nanopb/generator/protoc-gen-nanopb -osrc/c/lib/nanopb/BatchOperationsMessage.pb src/protobuf/BatchOperationsMessage.proto -I src/protobuf && python ~/DevApps/nanopb/generator/nanopb_generator.py src/c/lib/nanopb/BatchOperationsMessage.pb",
+    "proto": "npm run protoc && npm run protojs"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -44,6 +48,7 @@
     "clean-webpack-plugin": "^1.0.1",
     "eslint": "^4.10.0",
     "eslint-plugin-react": "^7.4.0",
+    "json-loader": "^0.5.7",
     "webpack": "^1.8.7",
     "webpack-bundle-analyzer": "^3.0.4"
   },
@@ -63,7 +68,8 @@
     },
     "messageKeys": [
       "batchOperations",
-      "batchOperationsLength"
+      "batchOperationsByteLength",
+      "message"
     ],
     "resources": {
       "media": [
