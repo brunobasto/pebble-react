@@ -1,5 +1,9 @@
-import { Operations } from '../utils/constants';
 import { enqueueMessage } from '../utils/messaging'
+import { Operations } from '../utils/constants';
+import protobuf from 'protobufjs';
+import protoJSON from './../../proto.json'
+
+const { OperationMessage } = protobuf.Root.fromJSON(protoJSON);
 
 let idCounter = 0;
 
@@ -14,12 +18,14 @@ class PebbleComponent {
     appendChild(child) {
         if (child instanceof PebbleComponent) {
             enqueueMessage(
-                {
-                    operation: Operations.appendChild,
-                    nodeType: child.nodeType,
-                    nodeId: child.uniqueId,
-                    props: this.getPropsAfterGetters(child, child.props)
-                }
+                OperationMessage.create(
+                    {
+                        ...child.getPropsMessage(child.props),
+                        operation: Operations.appendChild,
+                        nodeType: child.nodeType,
+                        nodeId: child.uniqueId
+                    }
+                )
             );
         }
 
@@ -63,12 +69,14 @@ class PebbleComponent {
         };
 
         enqueueMessage(
-            {
-                operation: Operations.commitUpdate,
-                nodeType: this.nodeType,
-                nodeId: this.uniqueId,
-                props: this.getPropsAfterGetters(this, newProps)
-            }
+            OperationMessage.create(
+                {
+                    ...this.getPropsMessage(newProps),
+                    operation: Operations.commitUpdate,
+                    nodeType: this.nodeType,
+                    nodeId: this.uniqueId
+                }
+            )
         );
     }
 
@@ -100,26 +108,8 @@ class PebbleComponent {
         return {};
     }
 
-    getPropsAfterGetters(component, props) {
-        const serializedProps = {};
-
-        for (const key in props) {
-            if (component.shouldSerializeProp(key) === false) {
-                continue;
-            }
-
-            if (this.hasGetter(component, key)) {
-                serializedProps[key] = component[key];
-            }
-            else {
-                serializedProps[key] = props[key];
-            }
-        }
-
-        return {
-            ...serializedProps,
-            ...component.getInternalProps()
-        };
+    getPropsMessage() {
+        throw new Error('Every component should implement getPropsMessage(props)');
     }
 
     insertBefore(child) {

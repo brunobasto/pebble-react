@@ -4,14 +4,20 @@
 #include "./runtime_tests/memory.h"
 
 // Libs
-#include "./lib/json/jsonparser.h"
+// #include "./lib/json/jsonparser.h"
 #include "./lib/dictionary/dictionary.h"
+
+// Protocol Buffers
+#include "./lib/nanopb/pb_encode.h"
+#include "./lib/nanopb/pb_decode.h"
+#include "./lib/nanopb/BatchOperationsMessage.pb.h"
 
 // Utils
 #include "./utils/string.h"
 #include "./utils/json_utils.h"
 
 // Reconcilers
+#include "./reconcilers/constants.h"
 #include "./reconcilers/animation.h"
 #include "./reconcilers/image_layer.h"
 #include "./reconcilers/text_layer.h"
@@ -21,45 +27,58 @@ AppTimer *timer;
 
 static Window *s_window;
 
-static void handleOperation(PebbleDictionary *operationDict)
+static void sendMessage(void *context, char *message)
 {
-  if (dict_has(operationDict, "operation") != 1)
+  DictionaryIterator *iter;
+
+  uint32_t result = app_message_outbox_begin(&iter);
+
+  if (result == APP_MSG_OK)
   {
-    return;
+    dict_write_cstring(iter, MESSAGE_KEY_message, message);
+    dict_write_end(iter);
+    app_message_outbox_send();
   }
+}
 
-  // Operation
-  const uint16_t operation = atoi(dict_get(operationDict, "operation"));
-  // APP_LOG(APP_LOG_LEVEL_INFO, "handling operation %d", operation);
-
-  // Node Type
-  const uint16_t nodeType = atoi(dict_get(operationDict, "nodeType"));
-
-  // Node Id
-  const char *nodeId = dict_get(operationDict, "nodeId");
-
-  // Props
-  PebbleDictionary *propsDict = NULL;
-
-  if (dict_has(operationDict, "props"))
-  {
-    propsDict = dict_new();
-
-    char *propsJSON = dict_get(operationDict, "props");
-
-    APP_LOG(APP_LOG_LEVEL_INFO, "before parse props json %d", heap_bytes_used());
-
-    json_utils_parse_object_to_dict(propsJSON, propsDict);
-
-    APP_LOG(APP_LOG_LEVEL_INFO, "after parse props json %d", heap_bytes_used());
-  }
+static void handleOperation(OperationMessage *operationMessage)
+{
+  const uint8_t operation = operationMessage->operation;
+  const uint8_t nodeType = operationMessage->nodeType;
+  const char *nodeId = operationMessage->nodeId;
 
   Layer *window_layer = window_get_root_layer(s_window);
 
-  // Reconcilers
-  text_layer_reconciler(window_layer, operation, nodeType, nodeId, propsDict);
-  image_layer_reconciler(window_layer, operation, nodeType, nodeId, propsDict);
-  animation_reconciler(window_layer, operation, nodeType, nodeId, propsDict);
+  switch (nodeType)
+  {
+  case NODE_TYPE_TEXT_LAYER:
+  {
+    TextLayerPropsMessage textLayerProps = operationMessage->textLayerProps;
+
+    text_layer_reconciler(window_layer, operation, nodeType, nodeId, &textLayerProps);
+  }
+  break;
+
+  default:
+    break;
+  }
+
+  // // Reconcilers
+  // text_layer_reconciler(window_layer, operation, nodeType, nodeId, propsDict);
+  // image_layer_reconciler(window_layer, operation, nodeType, nodeId, propsDict);
+  // animation_reconciler(window_layer, operation, nodeType, nodeId, propsDict);
+}
+
+static void handleBatchOperations(BatchOperationsMessage *batchOperations)
+{
+  APP_LOG(APP_LOG_LEVEL_INFO, "got %d operations", batchOperations->operations_count);
+
+  for (uint16_t i = 0; i < batchOperations->operations_count; i++)
+  {
+    OperationMessage operationMessage = batchOperations->operations[i];
+
+    handleOperation(&operationMessage);
+  }
 }
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *context)
@@ -74,7 +93,7 @@ static void prv_up_click_handler(ClickRecognizerRef recognizer, void *context)
 
 static void prv_down_click_handler(ClickRecognizerRef recognizer, void *context)
 {
-  // text_layer_set_text(s_text_layer, "Down");
+  sendMessage(NULL, "down");
 }
 
 static void prv_click_config_provider(void *context)
@@ -96,39 +115,30 @@ static void handleMessageReceived(DictionaryIterator *received, void *context)
 {
   Tuple *tuple;
 
-  // Batch Operations
   tuple = dict_find(received, MESSAGE_KEY_batchOperations);
 
   if (tuple)
   {
-    char *batchOperationsJSON = tuple->value->cstring;
+    uint8_t *buffer = tuple->value->data;
 
-    tuple = dict_find(received, MESSAGE_KEY_batchOperationsLength);
+    tuple = dict_find(received, MESSAGE_KEY_batchOperationsByteLength);
 
-    uint16_t batchOperationsLength = tuple->value->uint16;
+    uint16_t batchOperationsByteLength = tuple->value->uint16;
 
-    char **batchOperations = calloc(batchOperationsLength, sizeof(char *));
+    // Decode
+    BatchOperationsMessage batchOperationsMessage = BatchOperationsMessage_init_zero;
 
-    json_utils_parse_array_to_array(batchOperationsJSON, batchOperations);
+    pb_istream_t stream = pb_istream_from_buffer(buffer, batchOperationsByteLength);
 
-    for (uint16_t i = 0; i < batchOperationsLength; i++)
+    bool status = pb_decode(&stream, BatchOperationsMessage_fields, &batchOperationsMessage);
+
+    if (!status)
     {
-      PebbleDictionary *operationDict = dict_new();
-
-      json_utils_parse_object_to_dict(batchOperations[i], operationDict);
-
-      APP_LOG(APP_LOG_LEVEL_INFO, "before operation we use %d", heap_bytes_used());
-
-      handleOperation(operationDict);
-
-      APP_LOG(APP_LOG_LEVEL_INFO, "after operation we use %d", heap_bytes_used());
-
-      dict_free(operationDict);
-
-      free(batchOperations[i]);
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Decoding failed: %s\n", PB_GET_ERROR(&stream));
+      return;
     }
 
-    free(batchOperations);
+    handleBatchOperations(&batchOperationsMessage);
   }
 }
 
@@ -156,8 +166,6 @@ static void prv_window_unload(Window *window)
 
 static void prv_init(void)
 {
-  configureAppMessage();
-
   // <Window>
   s_window = window_create();
   window_set_click_config_provider(s_window, prv_click_config_provider);
@@ -172,11 +180,20 @@ static void prv_init(void)
   window_stack_push(s_window, animated);
   // </Window>
 
+  // Reconcilers Tests
+  Layer *window_layer = window_get_root_layer(s_window);
+
   layer_registry_init();
+
+  // assert_text_reconciler_init_deinit();
+  // assert_text_reconciler_add_remove(window_layer);
+  // assert_text_reconciler_remove_leftovers(window_layer);
 
   text_layer_reconciler_init();
   image_layer_reconciler_init();
   animation_reconciler_init();
+
+  configureAppMessage();
 
   APP_LOG(APP_LOG_LEVEL_INFO, "after prv_init we use %d", heap_bytes_used());
 }
@@ -199,6 +216,7 @@ int main(void)
   // assert_json_object_parse();
   // assert_json_array_parse();
   // assert_substr();
+
   APP_LOG(APP_LOG_LEVEL_INFO, "Currently using %d", heap_bytes_used());
   prv_init();
   app_event_loop();

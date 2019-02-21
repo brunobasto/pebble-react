@@ -1,3 +1,7 @@
+import protobuf from 'protobufjs';
+import protoJSON from './../../proto.json'
+const { BatchOperationsMessage, OperationMessage } = protobuf.Root.fromJSON(protoJSON);
+
 const insistence = 5.
 const queue = [];
 
@@ -48,21 +52,32 @@ export const flushMessages = async () => {
     if (queue.length > 0) {
         busy = true;
 
-        const operations = serializeMessage(queue);
+        console.log('Queue length', queue.length);
+
+        let batchOperationMessage = BatchOperationsMessage.create({ operations: queue });
+
+        let buffer = BatchOperationsMessage.encode(batchOperationMessage).finish();
+        // let decoded = BatchOperationsMessage.decode(buffer);
+        // console.log(decoded);
+
+        var array = [];
+        for (var i = 0; i < buffer.byteLength; i++) {
+            array.push(buffer[i]);
+        }
 
         Pebble.sendAppMessage(
             {
-                batchOperations: operations,
-                batchOperationsLength: queue.length
+                batchOperations: array,
+                batchOperationsByteLength: array.length
             },
             () => {
                 busy = false;
-                console.log('Successfully sent', operations, 'with ', operations.length);
+                console.log('Successfully sent', array, 'with ', array.length);
                 queue.length = 0;
             },
             () => {
                 busy = false;
-                console.log('Error sending messages', queue);
+                console.log('Error sending messages', array);
             }
         );
     }

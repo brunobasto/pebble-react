@@ -1,6 +1,7 @@
 #include <pebble.h>
 
 #include "../lib/dictionary/dictionary.h"
+#include "../lib/nanopb/BatchOperationsMessage.pb.h"
 #include "constants.h"
 
 void text_layer_reconciler_init();
@@ -12,4 +13,4 @@ void text_layer_reconciler(
     const uint16_t operation,
     const uint16_t nodeType,
     const char *nodeId,
-    PebbleDictionary *propsDict);
+    TextLayerPropsMessage *textLayerProps);
