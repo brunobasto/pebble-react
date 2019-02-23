@@ -9,7 +9,7 @@
           "type": "string",
           "id": 1,
           "options": {
-            "(nanopb).max_size": 10
+            "(nanopb).type": "FT_POINTER"
           }
         },
         "height": {
@@ -30,7 +30,7 @@
           "type": "string",
           "id": 4,
           "options": {
-            "(nanopb).max_size": 10
+            "(nanopb).type": "FT_POINTER"
           }
         },
         "top": {
@@ -73,6 +73,48 @@
         }
       }
     },
+    "AnimationPropsMessage": {
+      "fields": {
+        "duration": {
+          "type": "uint32",
+          "id": 1,
+          "options": {
+            "(nanopb).int_size": "IS_16"
+          }
+        },
+        "delay": {
+          "type": "uint32",
+          "id": 2,
+          "options": {
+            "(nanopb).int_size": "IS_16"
+          }
+        },
+        "startOperations": {
+          "rule": "repeated",
+          "type": "OperationMessage",
+          "id": 3,
+          "options": {
+            "(nanopb).type": "FT_POINTER"
+          }
+        },
+        "endOperations": {
+          "rule": "repeated",
+          "type": "OperationMessage",
+          "id": 4,
+          "options": {
+            "(nanopb).type": "FT_POINTER"
+          }
+        },
+        "durationChanged": {
+          "type": "bool",
+          "id": 5
+        },
+        "delayChanged": {
+          "type": "bool",
+          "id": 6
+        }
+      }
+    },
     "OperationMessage": {
       "fields": {
         "operation": {
@@ -93,12 +135,15 @@
           "type": "string",
           "id": 3,
           "options": {
-            "(nanopb).max_size": 5
+            "(nanopb).type": "FT_POINTER"
           }
         },
         "textLayerProps": {
           "type": "TextLayerPropsMessage",
-          "id": 4
+          "id": 4,
+          "options": {
+            "(nanopb).type": "FT_POINTER"
+          }
         }
       }
     },
@@ -109,7 +154,7 @@
           "type": "OperationMessage",
           "id": 1,
           "options": {
-            "(nanopb).max_count": 2
+            "(nanopb).type": "FT_POINTER"
           }
         }
       }

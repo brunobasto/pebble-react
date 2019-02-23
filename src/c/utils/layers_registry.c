@@ -1,4 +1,5 @@
 #include "layers_registry.h"
+#include "../lib/dictionary/dictionary.h"
 #include "../lib/hashmap/hashmap.h"
 
 static PebbleDictionary *layersRegistryDictionary;

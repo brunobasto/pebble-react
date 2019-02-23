@@ -13,15 +13,16 @@
 #include "./lib/nanopb/BatchOperationsMessage.pb.h"
 
 // Utils
-#include "./utils/string.h"
+#include "./utils/animation_registry.h"
 #include "./utils/json_utils.h"
+#include "./utils/layers_registry.h"
+#include "./utils/string.h"
 
 // Reconcilers
 #include "./reconcilers/constants.h"
 #include "./reconcilers/animation.h"
 #include "./reconcilers/image_layer.h"
 #include "./reconcilers/text_layer.h"
-#include "./utils/layers_registry.h"
 
 AppTimer *timer;
 
@@ -53,9 +54,9 @@ static void handleOperation(OperationMessage *operationMessage)
   {
   case NODE_TYPE_TEXT_LAYER:
   {
-    TextLayerPropsMessage textLayerProps = operationMessage->textLayerProps;
+    TextLayerPropsMessage *textLayerProps = operationMessage->textLayerProps;
 
-    text_layer_reconciler(window_layer, operation, nodeType, nodeId, &textLayerProps);
+    text_layer_reconciler(window_layer, operation, nodeType, nodeId, textLayerProps);
   }
   break;
 
@@ -79,6 +80,8 @@ static void handleBatchOperations(BatchOperationsMessage *batchOperations)
 
     handleOperation(&operationMessage);
   }
+
+  free(batchOperations->operations);
 }
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *context)
@@ -127,6 +130,8 @@ static void handleMessageReceived(DictionaryIterator *received, void *context)
 
     // Decode
     BatchOperationsMessage batchOperationsMessage = BatchOperationsMessage_init_zero;
+
+    // batchOperationsMessage.funcs.decode
 
     pb_istream_t stream = pb_istream_from_buffer(buffer, batchOperationsByteLength);
 
@@ -183,6 +188,7 @@ static void prv_init(void)
   // Reconcilers Tests
   Layer *window_layer = window_get_root_layer(s_window);
 
+  animation_registry_init();
   layer_registry_init();
 
   // assert_text_reconciler_init_deinit();
@@ -204,6 +210,7 @@ static void prv_deinit(void)
   image_layer_reconciler_deinit();
   animation_reconciler_deinit();
 
+  animation_registry_deinit();
   layer_registry_deinit();
 
   window_destroy(s_window);

@@ -1,6 +1,7 @@
 #include <pebble.h>
 
 #include "../lib/dictionary/dictionary.h"
+#include "../lib/nanopb/BatchOperationsMessage.pb.h"
 #include "constants.h"
 
 void image_layer_reconciler_init();

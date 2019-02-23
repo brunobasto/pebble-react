@@ -1,3 +1,5 @@
+#define PB_ENABLE_MALLOC
+
 /* Common parts of the nanopb library. Most of these are quite low-level
  * stuff. For the high-level interface, see pb_encode.h and pb_decode.h.
  */

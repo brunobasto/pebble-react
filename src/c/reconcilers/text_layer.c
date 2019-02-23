@@ -1,4 +1,5 @@
 #include "text_layer.h"
+#include "../utils/animation_registry.h"
 #include "../utils/layer_props_utils.h"
 #include "../utils/layers_registry.h"
 
@@ -28,14 +29,9 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
     return;
   }
 
-  APP_LOG(APP_LOG_LEVEL_INFO, "trying to render text");
-
   TextLayerPropsMessage *textLayerProps = (TextLayerPropsMessage *)dict_get(layerPropsRegistry, nodeId);
 
   graphics_context_set_text_color(ctx, GColorWhite);
-
-  APP_LOG(APP_LOG_LEVEL_INFO, "rendering text %s", textLayerProps->text);
-
   graphics_draw_text(
       ctx,
       textLayerProps->text,
@@ -46,24 +42,36 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
       NULL);
 }
 
-static void mergeCachedProps(TextLayerPropsMessage *cachedProps, TextLayerPropsMessage *newProps) {
-  if (newProps->textChanged) {
-    strcpy(cachedProps->text, newProps->text);
+void text_layer_reconciler_merge_props(
+  TextLayerPropsMessage *target,
+  TextLayerPropsMessage *source,
+  bool force)
+{
+  if (source->textChanged || force)
+  {
+    target->text = calloc(strlen(source->text) + 1, sizeof(char));
+    strcpy(target->text, source->text);
   }
-  if (newProps->alignmentChanged) {
-    strcpy(cachedProps->alignment, newProps->alignment);
+  if (source->alignmentChanged || force)
+  {
+    target->alignment = calloc(strlen(source->alignment) + 1, sizeof(char));
+    strcpy(target->alignment, source->alignment);
   }
-  if (newProps->leftChanged) {
-    cachedProps->left = newProps->left;
+  if (source->leftChanged || force)
+  {
+    target->left = source->left;
   }
-  if (newProps->topChanged) {
-    cachedProps->top = newProps->top;
+  if (source->topChanged || force)
+  {
+    target->top = source->top;
   }
-  if (newProps->widthChanged) {
-    cachedProps->width = newProps->width;
+  if (source->widthChanged || force)
+  {
+    target->width = source->width;
   }
-  if (newProps->heightChanged) {
-    cachedProps->height = newProps->height;
+  if (source->heightChanged || force)
+  {
+    target->height = source->height;
   }
 }
 
@@ -72,54 +80,62 @@ static void commitUpdate(
     TextLayerPropsMessage *newProps)
 {
   APP_LOG(
-    APP_LOG_LEVEL_DEBUG,
-    "commitUpdate (%s, %d, %d, %d, %d)",
-    newProps->text,
-    newProps->left,
-    newProps->top,
-    newProps->width,
-    newProps->height);
+      APP_LOG_LEVEL_DEBUG,
+      "commitUpdate (%s, %d, %d, %d, %d)",
+      newProps->text,
+      newProps->left,
+      newProps->top,
+      newProps->width,
+      newProps->height);
 
   // Merge newProps with cachedProps
   TextLayerPropsMessage *cachedProps = (TextLayerPropsMessage *)dict_get(layerPropsRegistry, nodeId);
 
-  mergeCachedProps(cachedProps, newProps);
+  text_layer_reconciler_merge_props(cachedProps, newProps, false);
 
   APP_LOG(
-    APP_LOG_LEVEL_DEBUG,
-    "commitUpdate cache (%s, %d, %d, %d, %d)",
-    cachedProps->text,
-    cachedProps->left,
-    cachedProps->top,
-    cachedProps->width,
-    cachedProps->height);
+      APP_LOG_LEVEL_DEBUG,
+      "commitUpdate cache (%s, %d, %d, %d, %d)",
+      cachedProps->text,
+      cachedProps->left,
+      cachedProps->top,
+      cachedProps->width,
+      cachedProps->height);
 
   Layer *layer = layer_registry_get(nodeId);
 
   GRect frame = GRect(
-    cachedProps->left,
-    cachedProps->top,
-    cachedProps->width,
-    cachedProps->height
-  );
+      cachedProps->left,
+      cachedProps->top,
+      cachedProps->width,
+      cachedProps->height);
 
   layer_set_frame(layer, frame);
+  layer_mark_dirty(layer);
 }
 
-static TextLayerPropsMessage * setupCachedProps(TextLayerPropsMessage *textLayerProps) {
+static void handleAnimationUpdate(
+    OperationMessage startOperation,
+    OperationMessage endOperation,
+    int percent)
+{
+  TextLayerPropsMessage *startProps = startOperation.textLayerProps;
+  TextLayerPropsMessage *endProps = startOperation.textLayerProps;
+  TextLayerPropsMessage resultProps = TextLayerPropsMessage_init_zero;
+
+  if (startProps->topChanged) {
+    resultProps.top = (int16_t)(startProps->top + (endProps->top - startProps->top) * percent / 100);
+    resultProps.topChanged = 1;
+  }
+
+  commitUpdate(startOperation.nodeId, &resultProps);
+}
+
+static TextLayerPropsMessage *setupCachedProps(TextLayerPropsMessage *textLayerProps)
+{
   TextLayerPropsMessage *cachedProps = malloc(sizeof(TextLayerPropsMessage));
 
-  TextLayerPropsMessage defaultProps = TextLayerPropsMessage_init_default;
-
-  strcpy(cachedProps->text, defaultProps.text);
-  strcpy(cachedProps->text, defaultProps.text);
-
-  cachedProps->top = defaultProps.top;
-  cachedProps->left = defaultProps.left;
-  cachedProps->height = defaultProps.height;
-  cachedProps->width = defaultProps.width;
-
-  mergeCachedProps(cachedProps, textLayerProps);
+  text_layer_reconciler_merge_props(cachedProps, textLayerProps, true);
 
   return cachedProps;
 }
@@ -130,13 +146,13 @@ static void appendChild(
     TextLayerPropsMessage *textLayerProps)
 {
   APP_LOG(
-    APP_LOG_LEVEL_DEBUG,
-    "adding text (%s, %d, %d, %d, %d)",
-    textLayerProps->text,
-    textLayerProps->left,
-    textLayerProps->top,
-    textLayerProps->width,
-    textLayerProps->height);
+      APP_LOG_LEVEL_DEBUG,
+      "adding text (%s, %d, %d, %d, %d)",
+      textLayerProps->text,
+      textLayerProps->left,
+      textLayerProps->top,
+      textLayerProps->width,
+      textLayerProps->height);
 
   TextLayerPropsMessage *cachedProps = setupCachedProps(textLayerProps);
 
@@ -145,11 +161,10 @@ static void appendChild(
   APP_LOG(APP_LOG_LEVEL_INFO, "managed to setup");
 
   GRect frame = GRect(
-    textLayerProps->left,
-    textLayerProps->top,
-    textLayerProps->width,
-    textLayerProps->height
-  );
+      textLayerProps->left,
+      textLayerProps->top,
+      textLayerProps->width,
+      textLayerProps->height);
 
   Layer *layer = layer_create(frame);
 
@@ -180,7 +195,8 @@ static void removeChild(const char *nodeId)
   dict_remove(layerPropsRegistry, nodeId);
 }
 
-static void freePropsCache(char *key, void* value) {
+static void freePropsCache(char *key, void *value)
+{
   removeChild(key);
 }
 
@@ -188,11 +204,14 @@ static void freePropsCache(char *key, void* value) {
 
 void text_layer_reconciler_init()
 {
+  animation_registry_add_callback(NODE_TYPE_TEXT_LAYER, handleAnimationUpdate);
+
   layerPropsRegistry = dict_new();
 }
 
 void text_layer_reconciler_deinit()
 {
+  animation_registry_remove_callback(NODE_TYPE_TEXT_LAYER);
   dict_foreach(layerPropsRegistry, freePropsCache);
   dict_free(layerPropsRegistry);
 }

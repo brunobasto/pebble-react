@@ -4,38 +4,36 @@
 #include "../utils/json_utils.h"
 #include "../utils/layer_props_utils.h"
 #include "../utils/layers_registry.h"
+#include "../utils/animation_registry.h"
 #include "../utils/string.h"
-
-typedef struct AnimationInfo_t
-{
-  uint16_t *childrenLength;
-  char **children;
-  PebbleDictionary *props;
-} AnimationInfo;
+#include "../utils/operations.h"
 
 static PebbleDictionary *animationsRegistry;
 static PebbleDictionary *animationsLengthRegistry;
 
-static PebbleHashMap *animationsInfoHashMap;
+static PebbleHashMap *startHashMap;
+static PebbleHashMap *endHashMap;
 
-typedef void (*ReconcilerCall)(char *nodeId, PebbleDictionary *props);
+typedef void (*AnimationCallback)(
+    OperationMessage *startOperation,
+    OperationMessage *endOperation,
+    int percent);
 
-static ReconcilerCall callReconciler = NULL;
+static AnimationCallback callAnimationCallback = NULL;
 
 static void handleAnimationUpdate(Animation *animation, const AnimationProgress progress);
 static void handleAnimationTeardown(Animation *animation);
 
 static AnimationImplementation impl = {.update = handleAnimationUpdate, .teardown = handleAnimationTeardown};
 
-static void setAnimationProperties(Animation *animation, PebbleDictionary *props)
+static void setAnimationProperties(Animation *animation, AnimationPropsMessage *props)
 {
   if (props == NULL)
   {
     return;
   }
   // Duration
-  uint32_t duration = atoi((char *)dict_get(props, "duration"));
-  animation_set_duration(animation, duration);
+  animation_set_duration(animation, props->duration);
 
   // Curve
   animation_set_curve(animation, AnimationCurveEaseInOut);
@@ -44,140 +42,72 @@ static void setAnimationProperties(Animation *animation, PebbleDictionary *props
   animation_set_implementation(animation, &impl);
 }
 
-static char **getAnimationChildren(PebbleDictionary *props, uint16_t *childrenLength)
-{
-  // Create the array to hold the values
-  char **children = malloc(*childrenLength * sizeof(char *));
-
-  // Parse JSON
-  json_utils_parse_array_to_array((char *)dict_get(props, "children"), children);
-
-  return children;
-}
-
 static Animation **registerAnimations(
     const char *nodeId,
-    PebbleDictionary *props,
-    uint16_t animationsLength)
+    AnimationPropsMessage *props)
 {
   // Create the arrays to hold the values
-  char **animationPropsJSONArray = malloc(animationsLength * sizeof(PebbleDictionary *));
-  Animation **animations = malloc(animationsLength * sizeof(Animation *));
+  Animation **animations = malloc(props->startOperations_count * sizeof(Animation *));
 
-  // Parse JSON
-  json_utils_parse_array_to_array((char *)dict_get(props, "animationProps"), animationPropsJSONArray);
-
-  uint16_t *childrenLength = malloc(sizeof(uint16_t));
-  *childrenLength = atoi((char *)dict_get(props, "childrenLength"));
-
-  for (uint16_t i = 0; i < animationsLength; i++)
+  for (uint16_t i = 0; i < props->startOperations_count; i++)
   {
     Animation *animation = animation_create();
     // Setup
     setAnimationProperties(animation, props);
-    // Create animation props dict
-    PebbleDictionary *animationProps = dict_new();
-    json_utils_parse_object_to_dict(animationPropsJSONArray[i], animationProps);
-    free(animationPropsJSONArray[i]);
-    // Props
-    AnimationInfo *info = malloc(sizeof(AnimationInfo));
-    info->childrenLength = childrenLength;
-    info->children = getAnimationChildren(props, childrenLength);
-    info->props = animationProps;
-    // Save hashmap
-    hash_add(animationsInfoHashMap, animation, info);
+    // Save hashmaps
+    // Need to copy or the memory on stack will get freed
+    // need to rememember to deallocate this later
+    hash_add(startHashMap, animation, operation_copy(props->startOperations[i]));
+    hash_add(endHashMap, animation, operation_copy(props->endOperations[i]));
     // Add to array
     animations[i] = animation;
   }
-
-  free(animationPropsJSONArray);
 
   return animations;
 }
 
 static void handleAnimationTeardown(Animation *animation)
 {
-  // if (hash_has(animationsChildrenLengthHashMap, animation)) {
-  //   uint16_t *animationChildrenLength = (uint16_t *)hash_get(animationsChildrenLengthHashMap, animation);
-
-  //   if (animationChildrenLength != NULL) {
-  //     free(animationChildrenLength);
-  //   }
-
-  //   char **animationChildren = (char **)hash_get(animationsChildrenHashMap, animation);
-
-  //   if (animationChildren != NULL) {
-  //     free(animationChildren);
-  //   }
-
-  //   hash_add(animationsChildrenHashMap, animation, NULL);
-  //   hash_add(animationsChildrenLengthHashMap, animation, NULL);
-  // }
 }
 
 static void handleAnimationUpdate(Animation *animation, const AnimationProgress progress)
 {
-  if (animation == NULL || !animation_is_scheduled(animation) || !hash_has(animationsInfoHashMap, animation))
+  // Return if, for some reason, we can't find info about the current animation.
+  if (
+      animation == NULL ||
+      !animation_is_scheduled(animation) ||
+      !hash_has(startHashMap, animation))
   {
     return;
   }
 
-  AnimationInfo *animationInfo = (AnimationInfo *)hash_get(animationsInfoHashMap, animation);
-
-  char **animationChildren = animationInfo->children;
-  uint16_t *animationChildrenLength = animationInfo->childrenLength;
-  PebbleDictionary *animationProps = animationInfo->props;
-
-  char *propName = (char *)dict_get(animationProps, "name");
-
-  // Start
-  char *startString = (char *)dict_get(animationProps, "start");
-  int start = atoi(startString);
-
-  // End
-  char *endString = (char *)dict_get(animationProps, "end");
-  int end = atoi(endString);
-
-  // Current value
+  // Calculate current percentage
   int percent = ((int)progress * 100) / ANIMATION_NORMALIZED_MAX;
-  int current = (int)(start + (end - start) * percent / 100);
-  // APP_LOG(APP_LOG_LEVEL_INFO, "seeting real top to %d", current);
 
-  // Create component props from animation props
-  PebbleDictionary *props = dict_new();
-  char *v = calloc(5 + 1, sizeof(char));
-  snprintf(v, 5 + 1, "%d", current);
-  dict_add(props, propName, v);
+  OperationMessage *startOperation = (OperationMessage *)hash_get(startHashMap, animation);
+  OperationMessage *endOperation = (OperationMessage *)hash_get(endHashMap, animation);
 
-  for (uint16_t i = 0; i < *animationChildrenLength; i++)
-  {
-    Layer *layer = layer_registry_get(animationChildren[i]);
-    callReconciler = layer_registry_get_reconciler(layer);
-    char *nodeId = layer_registry_get_node_id(layer);
-    callReconciler(nodeId, props);
-  }
-  free(v);
-  dict_remove(props, propName);
-  dict_free(props);
+  callAnimationCallback = animation_registry_get_callback(startOperation->nodeType);
+  callAnimationCallback(startOperation, endOperation, percent);
 }
 
 static void appendChild(
     const uint16_t nodeType,
     const char *nodeId,
-    PebbleDictionary *props)
+    AnimationPropsMessage *props)
 {
   // Animations
   uint16_t *animationsLength = malloc(sizeof(uint16_t));
-  *animationsLength = atoi((char *)dict_get(props, "animationsLength"));
+  *animationsLength = props->startOperations_count;
 
-  Animation **animations = registerAnimations(nodeId, props, *animationsLength);
+  Animation **animations = registerAnimations(nodeId, props);
 
   dict_add(animationsLengthRegistry, nodeId, animationsLength);
 
   Animation *composed;
 
   // Sequence?
-  bool isSequence = atoi((char *)dict_get(props, "isSequence"));
+  bool isSequence = false;
 
   if (isSequence)
   {
@@ -189,10 +119,10 @@ static void appendChild(
   }
 
   // Loop
-  if (dict_has(props, "loop") && atoi((char *)dict_get(props, "loop")))
-  {
-    animation_set_play_count(composed, ANIMATION_DURATION_INFINITE);
-  }
+  // if (dict_has(props, "loop") && atoi((char *)dict_get(props, "loop")))
+  // {
+  //   animation_set_play_count(composed, ANIMATION_DURATION_INFINITE);
+  // }
 
   dict_add(animationsRegistry, nodeId, animations);
 
@@ -203,7 +133,7 @@ static void appendChild(
 static void commitUpdate(
     const uint16_t nodeType,
     const char *nodeId,
-    PebbleDictionary *props)
+    AnimationPropsMessage *props)
 {
   // Animation **animations = (Animation **)dict_get(animationsRegistry, nodeId);
   // uint16_t *animationsLength = (uint16_t *)dict_get(animationsLengthRegistry, nodeId);
@@ -247,7 +177,8 @@ void animation_reconciler_init()
   animationsRegistry = dict_new();
   animationsLengthRegistry = dict_new();
 
-  animationsInfoHashMap = hash_new();
+  startHashMap = hash_new();
+  endHashMap = hash_new();
 }
 
 void animation_reconciler_deinit()
@@ -257,7 +188,8 @@ void animation_reconciler_deinit()
   dict_free(animationsRegistry);
   dict_free(animationsLengthRegistry);
 
-  hash_free(animationsInfoHashMap);
+  hash_free(startHashMap);
+  hash_free(endHashMap);
 }
 
 void animation_reconciler(
@@ -265,7 +197,7 @@ void animation_reconciler(
     const uint16_t operation,
     const uint16_t nodeType,
     const char *nodeId,
-    PebbleDictionary *props)
+    AnimationPropsMessage *props)
 {
   if (nodeType != NODE_TYPE_ANIMATION)
   {

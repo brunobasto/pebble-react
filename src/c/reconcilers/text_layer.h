@@ -4,6 +4,11 @@
 #include "../lib/nanopb/BatchOperationsMessage.pb.h"
 #include "constants.h"
 
+void text_layer_reconciler_merge_props(
+  TextLayerPropsMessage *cachedProps,
+  TextLayerPropsMessage *newProps,
+  bool force);
+
 void text_layer_reconciler_init();
 
 void text_layer_reconciler_deinit();
