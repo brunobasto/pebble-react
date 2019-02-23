@@ -19,13 +19,15 @@ message TextLayerPropsMessage {
 }
 
 message AnimationPropsMessage {
-   uint32 duration = 1 [(nanopb).int_size = IS_16];
-   uint32 delay = 2 [(nanopb).int_size = IS_16];
-   repeated OperationMessage startOperations = 3 [(nanopb).type = FT_POINTER];
-   repeated OperationMessage endOperations = 4 [(nanopb).type = FT_POINTER];
+   bool loop = 1;
+   bool sequence = 2;
+   repeated OperationMessage endOperations = 3 [(nanopb).type = FT_POINTER];
+   repeated OperationMessage startOperations = 4 [(nanopb).type = FT_POINTER];
+   uint32 delay = 5 [(nanopb).int_size = IS_16];
+   uint32 duration = 6 [(nanopb).int_size = IS_16];
    // Flags for diffing what changed
-   bool durationChanged = 5;
-   bool delayChanged = 6;
+   // bool durationChanged = 5;
+   // bool delayChanged = 6;
 }
 
 // message ImageLayerPropsMessage {

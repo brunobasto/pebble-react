@@ -107,9 +107,7 @@ static void appendChild(
   Animation *composed;
 
   // Sequence?
-  bool isSequence = false;
-
-  if (isSequence)
+  if (props.sequence)
   {
     composed = animation_sequence_create_from_array(animations, *animationsLength);
   }
@@ -119,10 +117,10 @@ static void appendChild(
   }
 
   // Loop
-  // if (dict_has(props, "loop") && atoi((char *)dict_get(props, "loop")))
-  // {
-  //   animation_set_play_count(composed, ANIMATION_DURATION_INFINITE);
-  // }
+  if (props.loop)
+  {
+    animation_set_play_count(composed, ANIMATION_DURATION_INFINITE);
+  }
 
   dict_add(animationsRegistry, nodeId, animations);
 

@@ -7,13 +7,7 @@ class Animation extends PebbleComponent {
         const {animationProps} = this.props;
 
         if (this.isSequence()) {
-            return animationProps.map(p => {
-                return {
-                    ...p,
-                    start: `${p.start}`,
-                    end: `${p.end}`
-                }
-            });
+            return animationProps;
         }
 
         const propsArray = [];
@@ -21,10 +15,8 @@ class Animation extends PebbleComponent {
         for (let key in animationProps) {
             propsArray.push(
                 {
-                    end: `${animationProps[key].end}`,
-                    name: key,
-                    start: `${animationProps[key].start}`,
-                    type: typeof animationProps[key].start
+                    end: animationProps[key].end,
+                    start: animationProps[key].start
                 }
             );
         }
@@ -32,28 +24,15 @@ class Animation extends PebbleComponent {
         return propsArray;
     }
 
-    get children() {
-        return this._children.map(child => child.uniqueId);
-    }
-
-    get duration() {
-        return `${this.props.duration}`;
-    }
-
-    get loop() {
-        return `${this.props.loop ? 1 : 0}`;
+    getPropsMessage() {
+        // for each children, create a start and end operation
+        // containing the getPropsMessage of each
+        // the "props" parameter sent to them should be collected from
+        // the animationProps array
     }
 
     isSequence() {
         return Array.isArray(this.props.animationProps) ? 1 : 0;
-    }
-
-    getInternalProps() {
-        return {
-            isSequence: `${this.isSequence()}`,
-            animationsLength: `${this.animationProps.length}`,
-            childrenLength: `${this._children.length}`
-        };
     }
 
     remove() {

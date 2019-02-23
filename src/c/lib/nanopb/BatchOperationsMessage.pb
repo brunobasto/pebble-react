@@ -1,5 +1,5 @@
 
-›
+ý
 BatchOperationsMessage.protonanopb.proto"¡
 TextLayerPropsMessage#
 	alignment (	B’?R	alignment
@@ -16,14 +16,14 @@
 
 topChanged (R
 topChanged"
-widthChanged (RwidthChanged"©
-AnimationPropsMessage!
-duration (B’?8Rduration
-delay (B’?8RdelayB
-startOperations (2.OperationMessageB’?RstartOperations>
-endOperations (2.OperationMessageB’?RendOperations(
-durationChanged (RdurationChanged"
-delayChanged (RdelayChanged"À
+widthChanged (RwidthChanged"‹
+AnimationPropsMessage
+loop (Rloop
+sequence (Rsequence>
+endOperations (2.OperationMessageB’?RendOperationsB
+startOperations (2.OperationMessageB’?RstartOperations
+delay (B’?8Rdelay!
+duration (B’?8Rduration"À
 OperationMessage#
 	operation (B’?8R	operation!
 nodeType (B’?8RnodeType
