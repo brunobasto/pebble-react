@@ -2,6 +2,9 @@
 
 #include "../utils/string.h"
 #include "../utils/json_utils.h"
+#include "../utils/operations.h"
+#include "../utils/layers_registry.h"
+#include "../utils/animation_registry.h"
 
 #include "../reconcilers/constants.h"
 #include "../reconcilers/text_layer.h"
@@ -29,6 +32,32 @@ void assert_dict_add_remove()
     dict_remove(dictionary, "b");
     dict_remove(dictionary, "c");
     logResult("assert_dict_add_remove", usedBefore, heap_bytes_used());
+    dict_free(dictionary);
+}
+
+static PebbleDictionary *foreachDict;
+static uint8_t foreachDictCount = 0;
+
+static void countForeachDictElement()
+{
+    foreachDictCount++;
+}
+
+void assert_dict_foreach_count()
+{
+    int usedBefore = heap_bytes_used();
+    foreachDict = dict_new();
+    dict_add(foreachDict, "a", "avalue");
+    dict_add(foreachDict, "b", "bvalue");
+    dict_add(foreachDict, "c", "cvalue");
+    dict_foreach(foreachDict, countForeachDictElement);
+    if (foreachDictCount != 3)
+    {
+        APP_LOG(APP_LOG_LEVEL_ERROR, "== Memory Tests == [assert_dict_foreach_count] Error: got count %d but expected %d", foreachDictCount, 3);
+    }
+    foreachDictCount = 0;
+    dict_free(foreachDict);
+    logResult("assert_dict_foreach_count", usedBefore, heap_bytes_used());
 }
 
 void assert_dict_new_free()
@@ -45,7 +74,8 @@ void assert_dict_new_free()
     logResult("assert_dict_new_free", usedBefore, heap_bytes_used());
 }
 
-void assert_substr() {
+void assert_substr()
+{
     const char *v = "-this is a quite long string-";
     uint16_t length = strlen(v);
     char *s = calloc(length - 1, sizeof(char));
@@ -85,29 +115,118 @@ void assert_json_array_parse()
 
 void assert_text_reconciler_init_deinit()
 {
+    // Setup
+    animation_registry_init();
+    layer_registry_init();
+
     int usedBefore = heap_bytes_used();
     text_layer_reconciler_init();
     text_layer_reconciler_deinit();
     logResult("assert_text_reconciler_init_deinit", usedBefore, heap_bytes_used());
+
+    // Teardown
+    animation_registry_deinit();
+    layer_registry_deinit();
 }
 
-void assert_text_reconciler_add_remove(Layer *parentLayer)
+void assert_text_reconciler_add_remove(Window *mainWindow)
 {
+    // Setup
+    Layer *parentLayer = window_get_root_layer(mainWindow);
+    animation_registry_init();
+    layer_registry_init();
     text_layer_reconciler_init();
+
     TextLayerPropsMessage textLayerProps = TextLayerPropsMessage_init_default;
     int usedBefore = heap_bytes_used();
     text_layer_reconciler(parentLayer, OPERATION_APPEND_CHILD, NODE_TYPE_TEXT_LAYER, "test", &textLayerProps);
     text_layer_reconciler(parentLayer, OPERATION_REMOVE_CHILD, NODE_TYPE_TEXT_LAYER, "test", NULL);
     logResult("assert_text_reconciler_add_remove", usedBefore, heap_bytes_used());
+
+    // Teardown
     text_layer_reconciler_deinit();
+    animation_registry_deinit();
+    layer_registry_deinit();
 }
 
-void assert_text_reconciler_remove_leftovers(Layer *parentLayer)
+void assert_text_reconciler_remove_leftovers(Window *mainWindow)
 {
-    TextLayerPropsMessage textLayerProps = TextLayerPropsMessage_init_default;
+    // Setup
+    Layer *parentLayer = window_get_root_layer(mainWindow);
+    animation_registry_init();
+    layer_registry_init();
+
     int usedBefore = heap_bytes_used();
     text_layer_reconciler_init();
-    text_layer_reconciler(parentLayer, OPERATION_APPEND_CHILD, NODE_TYPE_TEXT_LAYER, "test", &textLayerProps);
+    // One
+    TextLayerPropsMessage props1 = TextLayerPropsMessage_init_default;
+    props1.text = calloc(2, sizeof(char));
+    strcpy(props1.text, "a");
+    text_layer_reconciler(parentLayer, OPERATION_APPEND_CHILD, NODE_TYPE_TEXT_LAYER, "test1", &props1);
+    // Two
+    TextLayerPropsMessage props2 = TextLayerPropsMessage_init_default;
+    text_layer_reconciler(parentLayer, OPERATION_APPEND_CHILD, NODE_TYPE_TEXT_LAYER, "test2", &props2);
+    // Three
+    TextLayerPropsMessage props3 = TextLayerPropsMessage_init_default;
+    text_layer_reconciler(parentLayer, OPERATION_APPEND_CHILD, NODE_TYPE_TEXT_LAYER, "test3", &props3);
+    // Deinit should clean all
     text_layer_reconciler_deinit();
     logResult("assert_text_reconciler_remove_leftovers", usedBefore, heap_bytes_used());
+
+    // Teardown
+    animation_registry_deinit();
+    layer_registry_deinit();
+}
+
+void assert_operations_process_empty_batch(Window *mainWindow)
+{
+    BatchOperationsMessage batchOperations = BatchOperationsMessage_init_default;
+    int usedBefore = heap_bytes_used();
+    operations_process_batch(mainWindow, &batchOperations);
+    logResult("assert_operations_process_batch", usedBefore, heap_bytes_used());
+}
+
+void assert_operations_process_batch(Window *mainWindow)
+{
+    // Setup
+    animation_registry_init();
+    layer_registry_init();
+    text_layer_reconciler_init();
+
+    BatchOperationsMessage *batchOperations = malloc(sizeof(BatchOperationsMessage));
+    batchOperations->operations_count = 2;
+    batchOperations->operations = calloc(batchOperations->operations_count, sizeof(OperationMessage));
+
+    // Append Text
+    batchOperations->operations[0].nodeId = calloc(strlen("text0") + 1, sizeof(char));
+    strcpy(batchOperations->operations[0].nodeId, "text0");
+    batchOperations->operations[0].nodeType = NODE_TYPE_TEXT_LAYER;
+    batchOperations->operations[0].operation = OPERATION_APPEND_CHILD;
+
+    TextLayerPropsMessage *textLayerProps0 = malloc(sizeof(TextLayerPropsMessage));
+    textLayerProps0->top = 0;
+    textLayerProps0->left = 0;
+    textLayerProps0->width = 0;
+    textLayerProps0->height = 0;
+    textLayerProps0->text = calloc(strlen("text") + 1, sizeof(char));
+    strcpy(textLayerProps0->text, "text");
+    textLayerProps0->alignment = calloc(strlen("center"), sizeof(char));
+    strcpy(textLayerProps0->alignment, "center");
+    batchOperations->operations[0].textLayerProps = textLayerProps0;
+
+    // Remove Text
+    batchOperations->operations[1].nodeId = calloc(strlen("text0") + 1, sizeof(char));
+    strcpy(batchOperations->operations[1].nodeId, "text0");
+    batchOperations->operations[1].nodeType = NODE_TYPE_TEXT_LAYER;
+    batchOperations->operations[1].operation = OPERATION_REMOVE_CHILD;
+
+    int usedBefore = heap_bytes_used();
+    operations_process_batch(mainWindow, batchOperations);
+    logResult("assert_operations_process_batch", usedBefore, heap_bytes_used());
+
+    // Teardown
+    free(batchOperations);
+    text_layer_reconciler_deinit();
+    animation_registry_deinit();
+    layer_registry_deinit();
 }

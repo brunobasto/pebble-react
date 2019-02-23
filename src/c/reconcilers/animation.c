@@ -102,12 +102,14 @@ static void appendChild(
 
   Animation **animations = registerAnimations(nodeId, props);
 
+  // Saving on registry for later use (commitUpdate and removeChild)
   dict_add(animationsLengthRegistry, nodeId, animationsLength);
+  dict_add(animationsRegistry, nodeId, animations);
 
   Animation *composed;
 
   // Sequence?
-  if (props.sequence)
+  if (props->sequence)
   {
     composed = animation_sequence_create_from_array(animations, *animationsLength);
   }
@@ -116,13 +118,11 @@ static void appendChild(
     composed = animation_spawn_create_from_array(animations, *animationsLength);
   }
 
-  // Loop
-  if (props.loop)
+  // Loop?
+  if (props->loop)
   {
     animation_set_play_count(composed, ANIMATION_DURATION_INFINITE);
   }
-
-  dict_add(animationsRegistry, nodeId, animations);
 
   // Schedule animation
   animation_schedule(composed);

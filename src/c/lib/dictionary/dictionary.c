@@ -25,7 +25,6 @@ void dict_add(PebbleDictionary *dictionary, const char *key, void *value)
     {
         dict_remove(dictionary, key);
     }
-
     if (dictionary->head != NULL)
     {
         while (dictionary->tail != NULL)
@@ -42,20 +41,23 @@ void dict_add(PebbleDictionary *dictionary, const char *key, void *value)
     dictionary->head->value = value;
 }
 
-void dict_foreach(PebbleDictionary *dictionary, void *callback) {
+void dict_foreach(PebbleDictionary *dictionary, void *callback)
+{
     if (dictionary == NULL)
-        return;
-    if (dictionary->head == NULL)
-        return;
-    while (dictionary != NULL)
     {
-        if (dictionary->head->key != NULL) {
-            callDictForeach = callback;
-            callDictForeach(dictionary->head->key, dictionary->head->value);
-        }
-
-        dictionary = dictionary->tail;
+        return;
     }
+    if (dictionary->head == NULL)
+    {
+        return;
+    }
+    if (dictionary->head->key == NULL)
+    {
+        return;
+    }
+    callDictForeach = (DictForeachCall)callback;
+    callDictForeach(dictionary->head->key, dictionary->head->value);
+    dict_foreach(dictionary->tail, callback);
 }
 
 int dict_has(PebbleDictionary *dictionary, const char *key)
@@ -108,7 +110,6 @@ void dict_remove(PebbleDictionary *dictionary, const char *key)
                 dictionary->head->key = NULL;
                 free(dictionary->head);
                 dictionary->head = NULL;
-                free(dictionary);
             }
             else
             {
@@ -152,8 +153,6 @@ void dict_free(PebbleDictionary *dictionary)
     {
         dict_free(dictionary->tail);
     }
-    else
-    {
-        free(dictionary);
-    }
+
+    free(dictionary);
 }

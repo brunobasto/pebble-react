@@ -43,19 +43,37 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
 }
 
 void text_layer_reconciler_merge_props(
-  TextLayerPropsMessage *target,
-  TextLayerPropsMessage *source,
-  bool force)
+    TextLayerPropsMessage *target,
+    TextLayerPropsMessage *source,
+    bool force)
 {
   if (source->textChanged || force)
   {
-    target->text = calloc(strlen(source->text) + 1, sizeof(char));
-    strcpy(target->text, source->text);
+    if (source->text == NULL)
+    {
+      target->text = calloc(1, sizeof(char));
+      strcpy(target->text, "");
+    }
+    else
+    {
+      free(target->text);
+      target->text = calloc(strlen(source->text) + 1, sizeof(char));
+      strcpy(target->text, source->text);
+    }
   }
   if (source->alignmentChanged || force)
   {
-    target->alignment = calloc(strlen(source->alignment) + 1, sizeof(char));
-    strcpy(target->alignment, source->alignment);
+    if (source->alignment == NULL)
+    {
+      target->alignment = calloc(1, sizeof(char));
+      strcpy(target->alignment, "");
+    }
+    else
+    {
+      free(target->alignment);
+      target->alignment = calloc(strlen(source->alignment) + 1, sizeof(char));
+      strcpy(target->alignment, source->alignment);
+    }
   }
   if (source->leftChanged || force)
   {
@@ -110,6 +128,9 @@ static void commitUpdate(
       cachedProps->width,
       cachedProps->height);
 
+  free(newProps->text);
+  free(newProps->alignment);
+
   layer_set_frame(layer, frame);
   layer_mark_dirty(layer);
 }
@@ -123,7 +144,8 @@ static void handleAnimationUpdate(
   TextLayerPropsMessage *endProps = startOperation.textLayerProps;
   TextLayerPropsMessage resultProps = TextLayerPropsMessage_init_zero;
 
-  if (startProps->topChanged) {
+  if (startProps->topChanged)
+  {
     resultProps.top = (int16_t)(startProps->top + (endProps->top - startProps->top) * percent / 100);
     resultProps.topChanged = 1;
   }
@@ -134,6 +156,8 @@ static void handleAnimationUpdate(
 static TextLayerPropsMessage *setupCachedProps(TextLayerPropsMessage *textLayerProps)
 {
   TextLayerPropsMessage *cachedProps = malloc(sizeof(TextLayerPropsMessage));
+  cachedProps->text = NULL;
+  cachedProps->alignment = NULL;
 
   text_layer_reconciler_merge_props(cachedProps, textLayerProps, true);
 
@@ -147,7 +171,8 @@ static void appendChild(
 {
   APP_LOG(
       APP_LOG_LEVEL_DEBUG,
-      "adding text (%s, %d, %d, %d, %d)",
+      "adding text %s with (%s, %d, %d, %d, %d)",
+      nodeId,
       textLayerProps->text,
       textLayerProps->left,
       textLayerProps->top,
@@ -158,7 +183,7 @@ static void appendChild(
 
   dict_add(layerPropsRegistry, nodeId, cachedProps);
 
-  APP_LOG(APP_LOG_LEVEL_INFO, "managed to setup");
+  // APP_LOG(APP_LOG_LEVEL_INFO, "managed to setup");
 
   GRect frame = GRect(
       textLayerProps->left,
@@ -172,15 +197,20 @@ static void appendChild(
   layer_registry_add_reconciler(layer, commitUpdate);
   layer_add_child(parentLayer, layer);
   layer_set_update_proc(layer, handleCanvasUpdate);
+
+  free(textLayerProps->text);
+  free(textLayerProps->alignment);
 }
 
-static void removeChild(const char *nodeId)
+static void removeChild(const char *nodeId, bool removeFromRegistry)
 {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "removing text %s", nodeId);
+
   if (layer_registry_has(nodeId))
   {
     Layer *layer = layer_registry_get(nodeId);
 
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "removing %p from %s", layer, nodeId);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "with layer %p", layer);
 
     layer_remove_child_layers(layer);
     layer_remove_from_parent(layer);
@@ -191,13 +221,19 @@ static void removeChild(const char *nodeId)
   }
 
   TextLayerPropsMessage *cachedProps = (TextLayerPropsMessage *)dict_get(layerPropsRegistry, nodeId);
+  free(cachedProps->text);
+  free(cachedProps->alignment);
   free(cachedProps);
-  dict_remove(layerPropsRegistry, nodeId);
+
+  if (removeFromRegistry)
+  {
+    dict_remove(layerPropsRegistry, nodeId);
+  }
 }
 
 static void freePropsCache(char *key, void *value)
 {
-  removeChild(key);
+  removeChild(key, false);
 }
 
 // Public
@@ -212,6 +248,7 @@ void text_layer_reconciler_init()
 void text_layer_reconciler_deinit()
 {
   animation_registry_remove_callback(NODE_TYPE_TEXT_LAYER);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "gonna remove all");
   dict_foreach(layerPropsRegistry, freePropsCache);
   dict_free(layerPropsRegistry);
 }
@@ -237,7 +274,7 @@ void text_layer_reconciler(
     commitUpdate(nodeId, textLayerProps);
     break;
   case OPERATION_REMOVE_CHILD:
-    removeChild(nodeId);
+    removeChild(nodeId, true);
     break;
   default:
     break;
