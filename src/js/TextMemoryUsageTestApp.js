@@ -1,7 +1,7 @@
 import React, { Component, Fragment } from 'react';
 
 class App extends Component {
-    state = { show: true, top: 0 };
+    state = { show: true, what: 'React' };
 
     componentDidMount() {
         // setTimeout(
@@ -10,26 +10,35 @@ class App extends Component {
         //     },
         //     2000
         // );
-        Pebble.addEventListener("appmessage", (e) => {
-            this.setState({top: 50});
-        });
+        Pebble.addEventListener(
+            'appmessage',
+            (e) => {
+                this.setState(
+                    {
+                        what: 'Peble'
+                    }
+                );
+            }
+        );
     }
 
     render() {
-        const { show, top } = this.state;
+        const { show, what } = this.state;
 
         return (
             show && (
                 <Fragment>
-                    <text
-                        alignment={'center'}
-                        height={30}
-                        left={0}
-                        top={top}
-                        width={130}
-                    >
-                        {'Memory'}
-                    </text>
+                    {what.split('').map((letter, index) => (
+                        <text
+                            alignment={'center'}
+                            height={30}
+                            left={index * 29}
+                            top={50}
+                            width={29}
+                        >
+                            {letter}
+                        </text>
+                ))}
                 </Fragment>
             )
         );

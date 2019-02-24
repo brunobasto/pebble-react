@@ -1,22 +1,26 @@
 import PebbleComponent from './PebbleComponent';
-import Layer from './Layer';
-import { runInThisContext } from 'vm';
+import protobuf from 'protobufjs';
+import protoJSON from './../../proto.json'
+import { Operations } from '../utils/constants';
+
+const { AnimationPropsMessage, OperationMessage } = protobuf.Root.fromJSON(protoJSON);
 
 class Animation extends PebbleComponent {
-    get animationProps() {
-        const {animationProps} = this.props;
+    getAnimationPropsArray(props) {
+        const { animationProps } = props;
 
-        if (this.isSequence()) {
+        if (this.isSequence(animationProps)) {
             return animationProps;
         }
 
         const propsArray = [];
 
-        for (let key in animationProps) {
+        for (let name in animationProps) {
             propsArray.push(
                 {
-                    end: animationProps[key].end,
-                    start: animationProps[key].start
+                    name,
+                    end: animationProps[name].end,
+                    start: animationProps[name].start
                 }
             );
         }
@@ -24,15 +28,82 @@ class Animation extends PebbleComponent {
         return propsArray;
     }
 
-    getPropsMessage() {
-        // for each children, create a start and end operation
-        // containing the getPropsMessage of each
-        // the "props" parameter sent to them should be collected from
-        // the animationProps array
+    getPropsMessage(props) {
+        const startOperations = this.getStartOperations(props);
+        const endOperations = this.getEndOperations(props);
+
+        delete props.children;
+        delete props.animationProps;
+
+        return {
+            animationProps: AnimationPropsMessage.create(
+                {
+                    ...props,
+                    startOperations,
+                    endOperations,
+                    delayChanged: props.hasOwnProperty('delay'),
+                    durationChanged: props.hasOwnProperty('duration'),
+                    loopChanged: props.hasOwnProperty('loop'),
+                    sequenceChanged: props.hasOwnProperty('sequence'),
+                }
+            )
+        };
     }
 
-    isSequence() {
-        return Array.isArray(this.props.animationProps) ? 1 : 0;
+    getEndOperations(props) {
+        const { _children } = this;
+        const animationPropsArray = this.getAnimationPropsArray(props);
+
+        return _children.map(
+            child => {
+                const props = {};
+
+                animationPropsArray.forEach(
+                    ({ name, end }) => {
+                        props[name] = end;
+                    }
+                );
+
+                return OperationMessage.create(
+                    {
+                        nodeId: child.uniqueId,
+                        nodeType: child.nodeType,
+                        operation: Operations.commitUpdate,
+                        ...child.getPropsMessage(props)
+                    }
+                );
+            }
+        );
+    }
+
+    getStartOperations(props) {
+        const { _children } = this;
+        const animationPropsArray = this.getAnimationPropsArray(props);
+
+        return _children.map(
+            child => {
+                const props = {};
+
+                animationPropsArray.forEach(
+                    ({ name, start }) => {
+                        props[name] = start;
+                    }
+                );
+
+                return OperationMessage.create(
+                    {
+                        nodeId: child.uniqueId,
+                        nodeType: child.nodeType,
+                        operation: Operations.commitUpdate,
+                        ...child.getPropsMessage(props)
+                    }
+                );
+            }
+        );
+    }
+
+    isSequence(animationProps) {
+        return Array.isArray(animationProps) ? 1 : 0;
     }
 
     remove() {

@@ -26,6 +26,39 @@ static void handleAnimationTeardown(Animation *animation);
 
 static AnimationImplementation impl = {.update = handleAnimationUpdate, .teardown = handleAnimationTeardown};
 
+void animation_reconciler_merge_props(
+    AnimationPropsMessage *target,
+    AnimationPropsMessage *source,
+    bool force)
+{
+  if (source->durationChanged || force)
+  {
+    target->duration = source->duration;
+  }
+  if (source->delayChanged || force)
+  {
+    target->delay = source->delay;
+  }
+  if (source->loopChanged || force)
+  {
+    target->loop = source->loop;
+  }
+  if (source->sequenceChanged || force)
+  {
+    target->sequence = source->sequence;
+  }
+  target->startOperations = calloc(source->startOperations_count, sizeof(OperationMessage));
+  for (uint16_t i = 0; i < source->startOperations_count; i++)
+  {
+    operation_copy(&target->startOperations[i], source->startOperations[i]);
+  }
+  target->endOperations = calloc(source->endOperations_count, sizeof(OperationMessage));
+  for (uint16_t i = 0; i < source->endOperations_count; i++)
+  {
+    operation_copy(&target->endOperations[i], source->endOperations[i]);
+  }
+}
+
 static void setAnimationProperties(Animation *animation, AnimationPropsMessage *props)
 {
   if (props == NULL)
@@ -47,7 +80,7 @@ static Animation **registerAnimations(
     AnimationPropsMessage *props)
 {
   // Create the arrays to hold the values
-  Animation **animations = malloc(props->startOperations_count * sizeof(Animation *));
+  Animation **animations = calloc(props->startOperations_count, sizeof(Animation *));
 
   for (uint16_t i = 0; i < props->startOperations_count; i++)
   {
@@ -57,8 +90,10 @@ static Animation **registerAnimations(
     // Save hashmaps
     // Need to copy or the memory on stack will get freed
     // need to rememember to deallocate this later
-    hash_add(startHashMap, animation, operation_copy(props->startOperations[i]));
-    hash_add(endHashMap, animation, operation_copy(props->endOperations[i]));
+    OperationMessage *startCopy = malloc(sizeof(OperationMessage));
+    hash_add(startHashMap, animation, operation_copy(startCopy, props->startOperations[i]));
+    OperationMessage *endCopy = malloc(sizeof(OperationMessage));
+    hash_add(endHashMap, animation, operation_copy(endCopy, props->endOperations[i]));
     // Add to array
     animations[i] = animation;
   }

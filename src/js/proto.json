@@ -75,21 +75,15 @@
     },
     "AnimationPropsMessage": {
       "fields": {
-        "duration": {
-          "type": "uint32",
-          "id": 1,
-          "options": {
-            "(nanopb).int_size": "IS_16"
-          }
+        "loop": {
+          "type": "bool",
+          "id": 1
         },
-        "delay": {
-          "type": "uint32",
-          "id": 2,
-          "options": {
-            "(nanopb).int_size": "IS_16"
-          }
+        "sequence": {
+          "type": "bool",
+          "id": 2
         },
-        "startOperations": {
+        "endOperations": {
           "rule": "repeated",
           "type": "OperationMessage",
           "id": 3,
@@ -97,7 +91,7 @@
             "(nanopb).type": "FT_POINTER"
           }
         },
-        "endOperations": {
+        "startOperations": {
           "rule": "repeated",
           "type": "OperationMessage",
           "id": 4,
@@ -105,13 +99,35 @@
             "(nanopb).type": "FT_POINTER"
           }
         },
+        "delay": {
+          "type": "uint32",
+          "id": 5,
+          "options": {
+            "(nanopb).int_size": "IS_16"
+          }
+        },
+        "duration": {
+          "type": "uint32",
+          "id": 6,
+          "options": {
+            "(nanopb).int_size": "IS_16"
+          }
+        },
         "durationChanged": {
           "type": "bool",
-          "id": 5
+          "id": 7
         },
         "delayChanged": {
           "type": "bool",
-          "id": 6
+          "id": 8
+        },
+        "loopChanged": {
+          "type": "bool",
+          "id": 9
+        },
+        "sequenceChanged": {
+          "type": "bool",
+          "id": 10
         }
       }
     },
@@ -141,6 +157,13 @@
         "textLayerProps": {
           "type": "TextLayerPropsMessage",
           "id": 4,
+          "options": {
+            "(nanopb).type": "FT_POINTER"
+          }
+        },
+        "animationProps": {
+          "type": "AnimationPropsMessage",
+          "id": 5,
           "options": {
             "(nanopb).type": "FT_POINTER"
           }

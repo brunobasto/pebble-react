@@ -52,7 +52,7 @@ export const flushMessages = async () => {
     if (queue.length > 0) {
         busy = true;
 
-        console.log('Queue length', queue.length);
+        // console.log('Queue length', queue, queue.length);
 
         let batchOperationMessage = BatchOperationsMessage.create({ operations: queue });
 

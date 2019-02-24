@@ -26,8 +26,10 @@ message AnimationPropsMessage {
    uint32 delay = 5 [(nanopb).int_size = IS_16];
    uint32 duration = 6 [(nanopb).int_size = IS_16];
    // Flags for diffing what changed
-   // bool durationChanged = 5;
-   // bool delayChanged = 6;
+   bool durationChanged = 7;
+   bool delayChanged = 8;
+   bool loopChanged = 9;
+   bool sequenceChanged = 10;
 }
 
 // message ImageLayerPropsMessage {
@@ -42,6 +44,7 @@ message OperationMessage {
    uint32 nodeType = 2 [(nanopb).int_size = IS_8];
    string nodeId = 3 [(nanopb).type = FT_POINTER];
    TextLayerPropsMessage textLayerProps = 4 [(nanopb).type = FT_POINTER];
+   AnimationPropsMessage animationProps = 5 [(nanopb).type = FT_POINTER];
 }
 
 message BatchOperationsMessage {

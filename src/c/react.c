@@ -20,7 +20,6 @@
 #include "./utils/string.h"
 
 // Reconcilers
-#include "./reconcilers/constants.h"
 #include "./reconcilers/animation.h"
 #include "./reconcilers/image_layer.h"
 #include "./reconcilers/text_layer.h"
@@ -147,7 +146,7 @@ static void appInit(void)
 
   text_layer_reconciler_init();
   // image_layer_reconciler_init();
-  // animation_reconciler_init();
+  animation_reconciler_init();
 
   configureAppMessage();
 
@@ -158,7 +157,7 @@ static void appDeinit(void)
 {
   text_layer_reconciler_deinit();
   // image_layer_reconciler_deinit();
-  // animation_reconciler_deinit();
+  animation_reconciler_deinit();
 
   animation_registry_deinit();
   layer_registry_deinit();
@@ -169,20 +168,20 @@ static void appDeinit(void)
 
 int main(void)
 {
-  assert_dict_add_remove();
-  assert_dict_foreach_count();
-  assert_dict_new_free();
-  assert_json_object_parse();
-  assert_json_array_parse();
-  assert_substr();
+  // assert_dict_add_remove();
+  // assert_dict_foreach_count();
+  // assert_dict_new_free();
+  // assert_json_object_parse();
+  // assert_json_array_parse();
+  // assert_substr();
 
   // APP_LOG(APP_LOG_LEVEL_INFO, "Currently using %d", heap_bytes_used());
   mainWindow = window_create();
 
-  assert_text_reconciler_init_deinit();
-  assert_text_reconciler_add_remove(mainWindow);
-  assert_text_reconciler_remove_leftovers(mainWindow);
-  assert_operations_process_batch(mainWindow);
+  // assert_text_reconciler_init_deinit();
+  // assert_text_reconciler_add_remove(mainWindow);
+  // assert_text_reconciler_remove_leftovers(mainWindow);
+  // assert_operations_process_batch(mainWindow);
 
   appInit();
   app_event_loop();

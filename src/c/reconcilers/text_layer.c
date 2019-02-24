@@ -29,16 +29,16 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
     return;
   }
 
-  TextLayerPropsMessage *textLayerProps = (TextLayerPropsMessage *)dict_get(layerPropsRegistry, nodeId);
+  TextLayerPropsMessage *props = (TextLayerPropsMessage *)dict_get(layerPropsRegistry, nodeId);
 
   graphics_context_set_text_color(ctx, GColorWhite);
   graphics_draw_text(
       ctx,
-      textLayerProps->text,
+      props->text,
       fonts_get_system_font(FONT_KEY_ROBOTO_CONDENSED_21),
       layer_get_bounds(layer),
       GTextOverflowModeWordWrap,
-      getTextAlignment(textLayerProps->alignment),
+      getTextAlignment(props->alignment),
       NULL);
 }
 
@@ -49,6 +49,7 @@ void text_layer_reconciler_merge_props(
 {
   if (source->textChanged || force)
   {
+    target->textChanged = true;
     if (source->text == NULL)
     {
       target->text = calloc(1, sizeof(char));
@@ -63,6 +64,7 @@ void text_layer_reconciler_merge_props(
   }
   if (source->alignmentChanged || force)
   {
+    target->alignmentChanged = true;
     if (source->alignment == NULL)
     {
       target->alignment = calloc(1, sizeof(char));
@@ -77,18 +79,22 @@ void text_layer_reconciler_merge_props(
   }
   if (source->leftChanged || force)
   {
+    target->leftChanged = true;
     target->left = source->left;
   }
   if (source->topChanged || force)
   {
+    target->topChanged = true;
     target->top = source->top;
   }
   if (source->widthChanged || force)
   {
+    target->widthChanged = true;
     target->width = source->width;
   }
   if (source->heightChanged || force)
   {
+    target->heightChanged = true;
     target->height = source->height;
   }
 }
@@ -97,28 +103,10 @@ static void commitUpdate(
     const char *nodeId,
     TextLayerPropsMessage *newProps)
 {
-  APP_LOG(
-      APP_LOG_LEVEL_DEBUG,
-      "commitUpdate (%s, %d, %d, %d, %d)",
-      newProps->text,
-      newProps->left,
-      newProps->top,
-      newProps->width,
-      newProps->height);
-
   // Merge newProps with cachedProps
   TextLayerPropsMessage *cachedProps = (TextLayerPropsMessage *)dict_get(layerPropsRegistry, nodeId);
 
   text_layer_reconciler_merge_props(cachedProps, newProps, false);
-
-  APP_LOG(
-      APP_LOG_LEVEL_DEBUG,
-      "commitUpdate cache (%s, %d, %d, %d, %d)",
-      cachedProps->text,
-      cachedProps->left,
-      cachedProps->top,
-      cachedProps->width,
-      cachedProps->height);
 
   Layer *layer = layer_registry_get(nodeId);
 
@@ -128,20 +116,22 @@ static void commitUpdate(
       cachedProps->width,
       cachedProps->height);
 
-  free(newProps->text);
-  free(newProps->alignment);
-
   layer_set_frame(layer, frame);
   layer_mark_dirty(layer);
+
+  if (newProps->text != NULL)
+    free(newProps->text);
+  if (newProps->alignment != NULL)
+    free(newProps->alignment);
 }
 
 static void handleAnimationUpdate(
-    OperationMessage startOperation,
-    OperationMessage endOperation,
+    OperationMessage *startOperation,
+    OperationMessage *endOperation,
     int percent)
 {
-  TextLayerPropsMessage *startProps = startOperation.textLayerProps;
-  TextLayerPropsMessage *endProps = startOperation.textLayerProps;
+  TextLayerPropsMessage *startProps = startOperation->textLayerProps;
+  TextLayerPropsMessage *endProps = endOperation->textLayerProps;
   TextLayerPropsMessage resultProps = TextLayerPropsMessage_init_zero;
 
   if (startProps->topChanged)
@@ -149,17 +139,23 @@ static void handleAnimationUpdate(
     resultProps.top = (int16_t)(startProps->top + (endProps->top - startProps->top) * percent / 100);
     resultProps.topChanged = 1;
   }
+  if (startProps->leftChanged)
+  {
+    resultProps.left = (int16_t)(startProps->left + (endProps->left - startProps->left) * percent / 100);
+    resultProps.leftChanged = 1;
+  }
 
-  commitUpdate(startOperation.nodeId, &resultProps);
+  commitUpdate(startOperation->nodeId, &resultProps);
+  commitUpdate(startOperation->nodeId, &resultProps);
 }
 
-static TextLayerPropsMessage *setupCachedProps(TextLayerPropsMessage *textLayerProps)
+static TextLayerPropsMessage *setupCachedProps(TextLayerPropsMessage *props)
 {
   TextLayerPropsMessage *cachedProps = malloc(sizeof(TextLayerPropsMessage));
   cachedProps->text = NULL;
   cachedProps->alignment = NULL;
 
-  text_layer_reconciler_merge_props(cachedProps, textLayerProps, true);
+  text_layer_reconciler_merge_props(cachedProps, props, true);
 
   return cachedProps;
 }
@@ -167,50 +163,44 @@ static TextLayerPropsMessage *setupCachedProps(TextLayerPropsMessage *textLayerP
 static void appendChild(
     Layer *parentLayer,
     const char *nodeId,
-    TextLayerPropsMessage *textLayerProps)
+    TextLayerPropsMessage *props)
 {
-  APP_LOG(
-      APP_LOG_LEVEL_DEBUG,
-      "adding text %s with (%s, %d, %d, %d, %d)",
-      nodeId,
-      textLayerProps->text,
-      textLayerProps->left,
-      textLayerProps->top,
-      textLayerProps->width,
-      textLayerProps->height);
-
-  TextLayerPropsMessage *cachedProps = setupCachedProps(textLayerProps);
+  TextLayerPropsMessage *cachedProps = setupCachedProps(props);
 
   dict_add(layerPropsRegistry, nodeId, cachedProps);
 
-  // APP_LOG(APP_LOG_LEVEL_INFO, "managed to setup");
+  APP_LOG(
+      APP_LOG_LEVEL_DEBUG,
+      "appendChild cache (%s, %d, %d, %d, %d)",
+      cachedProps->text,
+      cachedProps->left,
+      cachedProps->top,
+      cachedProps->width,
+      cachedProps->height);
 
   GRect frame = GRect(
-      textLayerProps->left,
-      textLayerProps->top,
-      textLayerProps->width,
-      textLayerProps->height);
+      props->left,
+      props->top,
+      props->width,
+      props->height);
 
   Layer *layer = layer_create(frame);
 
   layer_registry_add(nodeId, layer);
   layer_registry_add_reconciler(layer, commitUpdate);
-  layer_add_child(parentLayer, layer);
   layer_set_update_proc(layer, handleCanvasUpdate);
+  layer_add_child(parentLayer, layer);
+  layer_mark_dirty(layer);
 
-  free(textLayerProps->text);
-  free(textLayerProps->alignment);
+  free(props->text);
+  free(props->alignment);
 }
 
 static void removeChild(const char *nodeId, bool removeFromRegistry)
 {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "removing text %s", nodeId);
-
   if (layer_registry_has(nodeId))
   {
     Layer *layer = layer_registry_get(nodeId);
-
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "with layer %p", layer);
 
     layer_remove_child_layers(layer);
     layer_remove_from_parent(layer);
@@ -248,7 +238,6 @@ void text_layer_reconciler_init()
 void text_layer_reconciler_deinit()
 {
   animation_registry_remove_callback(NODE_TYPE_TEXT_LAYER);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "gonna remove all");
   dict_foreach(layerPropsRegistry, freePropsCache);
   dict_free(layerPropsRegistry);
 }

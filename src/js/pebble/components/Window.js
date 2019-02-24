@@ -6,6 +6,10 @@ class Window extends PebbleComponent {
             test: `test`,
         };
     }
+
+    getPropsMessage(props) {
+        return {};
+    }
 }
 
 export default Window;
