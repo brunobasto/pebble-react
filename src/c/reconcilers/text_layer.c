@@ -3,7 +3,7 @@
 #include "../utils/layer_props_utils.h"
 #include "../utils/layers_registry.h"
 
-static PebbleDictionary *layerPropsRegistry;
+static PebbleDictionary *propsRegistry;
 
 static GTextAlignment getTextAlignment(char *alignmentValue)
 {
@@ -29,7 +29,7 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
     return;
   }
 
-  TextLayerPropsMessage *props = (TextLayerPropsMessage *)dict_get(layerPropsRegistry, nodeId);
+  TextLayerPropsMessage *props = (TextLayerPropsMessage *)dict_get(propsRegistry, nodeId);
 
   graphics_context_set_text_color(ctx, GColorWhite);
   graphics_draw_text(
@@ -50,6 +50,9 @@ void text_layer_reconciler_merge_props(
   if (source->textChanged || force)
   {
     target->textChanged = true;
+    if (target->text != NULL) {
+      free(target->text);
+    }
     if (source->text == NULL)
     {
       target->text = calloc(1, sizeof(char));
@@ -57,14 +60,17 @@ void text_layer_reconciler_merge_props(
     }
     else
     {
-      free(target->text);
       target->text = calloc(strlen(source->text) + 1, sizeof(char));
       strcpy(target->text, source->text);
+      free(source->text);
     }
   }
   if (source->alignmentChanged || force)
   {
     target->alignmentChanged = true;
+    if (target->alignment != NULL) {
+      free(target->alignment);
+    }
     if (source->alignment == NULL)
     {
       target->alignment = calloc(1, sizeof(char));
@@ -72,9 +78,9 @@ void text_layer_reconciler_merge_props(
     }
     else
     {
-      free(target->alignment);
       target->alignment = calloc(strlen(source->alignment) + 1, sizeof(char));
       strcpy(target->alignment, source->alignment);
+      free(source->alignment);
     }
   }
   if (source->leftChanged || force)
@@ -104,7 +110,7 @@ static void commitUpdate(
     TextLayerPropsMessage *newProps)
 {
   // Merge newProps with cachedProps
-  TextLayerPropsMessage *cachedProps = (TextLayerPropsMessage *)dict_get(layerPropsRegistry, nodeId);
+  TextLayerPropsMessage *cachedProps = (TextLayerPropsMessage *)dict_get(propsRegistry, nodeId);
 
   text_layer_reconciler_merge_props(cachedProps, newProps, false);
 
@@ -118,11 +124,6 @@ static void commitUpdate(
 
   layer_set_frame(layer, frame);
   layer_mark_dirty(layer);
-
-  if (newProps->text != NULL)
-    free(newProps->text);
-  if (newProps->alignment != NULL)
-    free(newProps->alignment);
 }
 
 static void handleAnimationUpdate(
@@ -167,7 +168,7 @@ static void appendChild(
 {
   TextLayerPropsMessage *cachedProps = setupCachedProps(props);
 
-  dict_add(layerPropsRegistry, nodeId, cachedProps);
+  dict_add(propsRegistry, nodeId, cachedProps);
 
   APP_LOG(
       APP_LOG_LEVEL_DEBUG,
@@ -191,9 +192,6 @@ static void appendChild(
   layer_set_update_proc(layer, handleCanvasUpdate);
   layer_add_child(parentLayer, layer);
   layer_mark_dirty(layer);
-
-  free(props->text);
-  free(props->alignment);
 }
 
 static void removeChild(const char *nodeId, bool removeFromRegistry)
@@ -210,14 +208,14 @@ static void removeChild(const char *nodeId, bool removeFromRegistry)
     layer_destroy(layer);
   }
 
-  TextLayerPropsMessage *cachedProps = (TextLayerPropsMessage *)dict_get(layerPropsRegistry, nodeId);
+  TextLayerPropsMessage *cachedProps = (TextLayerPropsMessage *)dict_get(propsRegistry, nodeId);
   free(cachedProps->text);
   free(cachedProps->alignment);
   free(cachedProps);
 
   if (removeFromRegistry)
   {
-    dict_remove(layerPropsRegistry, nodeId);
+    dict_remove(propsRegistry, nodeId);
   }
 }
 
@@ -232,14 +230,14 @@ void text_layer_reconciler_init()
 {
   animation_registry_add_callback(NODE_TYPE_TEXT_LAYER, handleAnimationUpdate);
 
-  layerPropsRegistry = dict_new();
+  propsRegistry = dict_new();
 }
 
 void text_layer_reconciler_deinit()
 {
   animation_registry_remove_callback(NODE_TYPE_TEXT_LAYER);
-  dict_foreach(layerPropsRegistry, freePropsCache);
-  dict_free(layerPropsRegistry);
+  dict_foreach(propsRegistry, freePropsCache);
+  dict_free(propsRegistry);
 }
 
 void text_layer_reconciler(

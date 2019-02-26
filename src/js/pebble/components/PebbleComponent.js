@@ -42,14 +42,10 @@ class PebbleComponent {
                 }
             );
 
-            child.remove();
+            child._children.forEach(c => child.removeChild(c));
         }
 
         this._children = this._children.filter(c => c !== child);
-    }
-
-    remove() {
-
     }
 
     prepareUpdate(oldProps, newProps) {

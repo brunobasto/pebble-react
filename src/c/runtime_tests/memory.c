@@ -7,6 +7,7 @@
 #include "../utils/animation_registry.h"
 
 #include "../reconcilers/constants.h"
+#include "../reconcilers/animation.h"
 #include "../reconcilers/text_layer.h"
 
 static void logResult(const char *name, int before, int after)
@@ -20,6 +21,10 @@ static void logResult(const char *name, int before, int after)
         APP_LOG(APP_LOG_LEVEL_INFO, "== Memory Tests == [%s] SUCCESS -", name);
     }
 }
+
+/*
+ * Dictionary memory leak tests
+ */
 
 void assert_dict_add_remove()
 {
@@ -74,6 +79,10 @@ void assert_dict_new_free()
     logResult("assert_dict_new_free", usedBefore, heap_bytes_used());
 }
 
+/*
+ * Strings memory leak tests
+ */
+
 void assert_substr()
 {
     const char *v = "-this is a quite long string-";
@@ -86,6 +95,10 @@ void assert_substr()
     logResult("assert_substr", usedBefore, heap_bytes_used());
     free(s);
 }
+
+/*
+ * JSON memory leak tests
+ */
 
 void assert_json_object_parse()
 {
@@ -112,6 +125,10 @@ void assert_json_array_parse()
     logResult("assert_json_array_parse", usedBefore, heap_bytes_used());
     free(array);
 }
+
+/*
+ * Text Layer Reconciler memory leak tests
+ */
 
 void assert_text_reconciler_init_deinit()
 {
@@ -149,6 +166,35 @@ void assert_text_reconciler_add_remove(Window *mainWindow)
     layer_registry_deinit();
 }
 
+void assert_text_reconciler_commit_update(Window *mainWindow)
+{
+    // Setup
+    Layer *parentLayer = window_get_root_layer(mainWindow);
+    animation_registry_init();
+    layer_registry_init();
+    text_layer_reconciler_init();
+
+    TextLayerPropsMessage initialProps = TextLayerPropsMessage_init_default;
+    text_layer_reconciler(parentLayer, OPERATION_APPEND_CHILD, NODE_TYPE_TEXT_LAYER, "test", &initialProps);
+
+    TextLayerPropsMessage updateProps = TextLayerPropsMessage_init_default;
+    updateProps.alignment = calloc(strlen("center") + 1, sizeof(char));
+    strcpy(updateProps.alignment, "center");
+    updateProps.text = calloc(strlen("text") + 1, sizeof(char));
+    strcpy(updateProps.text, "text");
+    updateProps.top = 50;
+    int usedBefore = heap_bytes_used();
+    text_layer_reconciler(parentLayer, OPERATION_COMMIT_UPDATE, NODE_TYPE_TEXT_LAYER, "test", &updateProps);
+
+    logResult("assert_text_reconciler_commit_update", usedBefore, heap_bytes_used());
+    text_layer_reconciler(parentLayer, OPERATION_REMOVE_CHILD, NODE_TYPE_TEXT_LAYER, "test", NULL);
+
+    // Teardown
+    text_layer_reconciler_deinit();
+    animation_registry_deinit();
+    layer_registry_deinit();
+}
+
 void assert_text_reconciler_remove_leftovers(Window *mainWindow)
 {
     // Setup
@@ -176,6 +222,113 @@ void assert_text_reconciler_remove_leftovers(Window *mainWindow)
     // Teardown
     animation_registry_deinit();
     layer_registry_deinit();
+}
+
+/*
+ * Animation Reconciler memory leak tests
+ */
+
+void assert_animation_reconciler_init_deinit()
+{
+    // Setup
+    animation_registry_init();
+    layer_registry_init();
+
+    int usedBefore = heap_bytes_used();
+    animation_reconciler_init();
+    animation_reconciler_deinit();
+    logResult("assert_animation_reconciler_init_deinit", usedBefore, heap_bytes_used());
+
+    // Teardown
+    animation_registry_deinit();
+    layer_registry_deinit();
+}
+
+void assert_animation_reconciler_add_remove(Window *mainWindow)
+{
+    // Setup
+    Layer *parentLayer = window_get_root_layer(mainWindow);
+    animation_registry_init();
+    layer_registry_init();
+    animation_reconciler_init();
+    text_layer_reconciler_init();
+
+    AnimationPropsMessage animationProps = AnimationPropsMessage_init_default;
+    // Start Operations
+    OperationMessage *startOperations = calloc(1, sizeof(OperationMessage));
+    OperationMessage startOperation = OperationMessage_init_default;
+    startOperation.nodeType = NODE_TYPE_TEXT_LAYER;
+    startOperation.nodeId = calloc(strlen("startText") + 1, sizeof(char));
+    strcpy(startOperation.nodeId, "startText");
+    startOperation.operation = OPERATION_COMMIT_UPDATE;
+    // Text Start Props
+    TextLayerPropsMessage *textLayerStartProps = malloc(sizeof(TextLayerPropsMessage));
+    textLayerStartProps->top = 0;
+    textLayerStartProps->topChanged = 1;
+    startOperation.textLayerProps = textLayerStartProps;
+    // End Operations
+    OperationMessage *endOperations = calloc(1, sizeof(OperationMessage));
+    OperationMessage endOperation = OperationMessage_init_default;
+    endOperation.nodeType = NODE_TYPE_TEXT_LAYER;
+    endOperation.nodeId = calloc(strlen("endText") + 1, sizeof(char));
+    strcpy(endOperation.nodeId, "endText");
+    endOperation.operation = OPERATION_COMMIT_UPDATE;
+    // Text end Props
+    TextLayerPropsMessage *textLayerEndProps = malloc(sizeof(TextLayerPropsMessage));
+    textLayerEndProps->top = 50;
+    textLayerEndProps->topChanged = 1;
+    endOperation.textLayerProps = textLayerEndProps;
+    //
+    startOperations[0] = startOperation;
+    animationProps.startOperations = startOperations;
+    animationProps.startOperations_count = 1;
+    endOperations[0] = endOperation;
+    animationProps.endOperations = endOperations;
+    animationProps.endOperations_count = 1;
+
+    int usedBefore = heap_bytes_used();
+    animation_reconciler(parentLayer, OPERATION_APPEND_CHILD, NODE_TYPE_ANIMATION, "test", &animationProps);
+    animation_reconciler(parentLayer, OPERATION_REMOVE_CHILD, NODE_TYPE_ANIMATION, "test", NULL);
+    logResult("assert_animation_reconciler_add_remove", usedBefore, heap_bytes_used());
+
+    // Teardown
+    animation_reconciler_deinit();
+    text_layer_reconciler_deinit();
+    animation_registry_deinit();
+    layer_registry_deinit();
+}
+
+/*
+ * Operations memory leak tests
+ */
+void assert_operation_copy()
+{
+    // Create Operation
+    OperationMessage sourceOperation = OperationMessage_init_default;
+    sourceOperation.nodeType = NODE_TYPE_TEXT_LAYER;
+    sourceOperation.nodeId = calloc(strlen("nodeId") + 1, sizeof(char));
+    strcpy(sourceOperation.nodeId, "nodeId");
+    sourceOperation.operation = OPERATION_COMMIT_UPDATE;
+    // Set Text Props
+    TextLayerPropsMessage *textLayerProps = malloc(sizeof(TextLayerPropsMessage));
+    textLayerProps->top = 0;
+    textLayerProps->topChanged = 1;
+    textLayerProps->text = calloc(strlen("text") + 1, sizeof(char));
+    strcpy(textLayerProps->text, "text");
+    sourceOperation.textLayerProps = textLayerProps;
+
+    OperationMessage *copy = malloc(sizeof(OperationMessage));
+
+    int usedBefore = heap_bytes_used();
+    operation_copy(copy, sourceOperation);
+
+    free(copy->textLayerProps->alignment);
+    free(copy->textLayerProps->text);
+    free(copy->textLayerProps);
+    free(copy->nodeId);
+    free(copy);
+
+    logResult("assert_operation_copy", usedBefore, heap_bytes_used());
 }
 
 void assert_operations_process_empty_batch(Window *mainWindow)

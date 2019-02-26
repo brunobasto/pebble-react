@@ -7,6 +7,7 @@ OperationMessage *operation_copy(OperationMessage *copy, OperationMessage operat
 {
   copy->nodeId = calloc(strlen(operation.nodeId) + 1, sizeof(char));
   strcpy(copy->nodeId, operation.nodeId);
+  free(operation.nodeId);
   copy->nodeType = operation.nodeType;
   copy->operation = operation.operation;
 
@@ -15,16 +16,13 @@ OperationMessage *operation_copy(OperationMessage *copy, OperationMessage operat
   case NODE_TYPE_TEXT_LAYER:
   {
     copy->textLayerProps = malloc(sizeof(TextLayerPropsMessage));
+    copy->textLayerProps->alignment = NULL;
+    copy->textLayerProps->text = NULL;
 
     text_layer_reconciler_merge_props(copy->textLayerProps, operation.textLayerProps, true);
+    free(operation.textLayerProps);
   }
   break;
-  case NODE_TYPE_ANIMATION:
-  {
-    copy->animationProps = malloc(sizeof(AnimationPropsMessage));
-
-    animation_reconciler_merge_props(copy->animationProps, operation.animationProps, true);
-  }
   default:
     break;
   }

@@ -33,9 +33,7 @@ const config = {
   plugins: [
     new webpack.DefinePlugin({ "process.env.NODE_ENV": JSON.stringify("production") }),
     new CleanWebpackPlugin(),
-    new webpack.optimize.UglifyJsPlugin({
-      sourceMap: true
-    }),
+    new webpack.optimize.UglifyJsPlugin({sourceMap: true}),
     // new BundleAnalyzerPlugin()
   ]
 };

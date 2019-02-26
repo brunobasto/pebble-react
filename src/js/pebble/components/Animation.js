@@ -106,12 +106,6 @@ class Animation extends PebbleComponent {
         return Array.isArray(animationProps) ? 1 : 0;
     }
 
-    remove() {
-        this._children.forEach(element => {
-            this.removeChild(element);
-        });
-    }
-
     shouldSerializeProp() {
         return true;
     }

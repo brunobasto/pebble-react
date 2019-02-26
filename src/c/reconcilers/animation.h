@@ -14,8 +14,3 @@ void animation_reconciler(
     const uint16_t nodeType,
     const char *nodeId,
     AnimationPropsMessage *props);
-
-void animation_reconciler_merge_props(
-    AnimationPropsMessage *target,
-    AnimationPropsMessage *source,
-    bool force);

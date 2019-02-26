@@ -171,17 +171,27 @@ int main(void)
   // assert_dict_add_remove();
   // assert_dict_foreach_count();
   // assert_dict_new_free();
+
   // assert_json_object_parse();
   // assert_json_array_parse();
+
   // assert_substr();
 
-  // APP_LOG(APP_LOG_LEVEL_INFO, "Currently using %d", heap_bytes_used());
   mainWindow = window_create();
+
+  // assert_animation_reconciler_init_deinit();
+  // assert_animation_reconciler_add_remove(mainWindow);
 
   // assert_text_reconciler_init_deinit();
   // assert_text_reconciler_add_remove(mainWindow);
   // assert_text_reconciler_remove_leftovers(mainWindow);
+  // assert_text_reconciler_commit_update(mainWindow);
+
+  // assert_operation_copy();
   // assert_operations_process_batch(mainWindow);
+
+  // window_stack_pop_all(false);
+  // window_destroy(mainWindow);
 
   appInit();
   app_event_loop();

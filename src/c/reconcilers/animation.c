@@ -9,7 +9,6 @@
 #include "../utils/operations.h"
 
 static PebbleDictionary *animationsRegistry;
-static PebbleDictionary *animationsLengthRegistry;
 
 static PebbleHashMap *startHashMap;
 static PebbleHashMap *endHashMap;
@@ -19,45 +18,19 @@ typedef void (*AnimationCallback)(
     OperationMessage *endOperation,
     int percent);
 
+typedef struct _AnimationInfo
+{
+  Animation **animations;
+  uint8_t length;
+
+} AnimationInfo;
+
 static AnimationCallback callAnimationCallback = NULL;
 
 static void handleAnimationUpdate(Animation *animation, const AnimationProgress progress);
 static void handleAnimationTeardown(Animation *animation);
 
 static AnimationImplementation impl = {.update = handleAnimationUpdate, .teardown = handleAnimationTeardown};
-
-void animation_reconciler_merge_props(
-    AnimationPropsMessage *target,
-    AnimationPropsMessage *source,
-    bool force)
-{
-  if (source->durationChanged || force)
-  {
-    target->duration = source->duration;
-  }
-  if (source->delayChanged || force)
-  {
-    target->delay = source->delay;
-  }
-  if (source->loopChanged || force)
-  {
-    target->loop = source->loop;
-  }
-  if (source->sequenceChanged || force)
-  {
-    target->sequence = source->sequence;
-  }
-  target->startOperations = calloc(source->startOperations_count, sizeof(OperationMessage));
-  for (uint16_t i = 0; i < source->startOperations_count; i++)
-  {
-    operation_copy(&target->startOperations[i], source->startOperations[i]);
-  }
-  target->endOperations = calloc(source->endOperations_count, sizeof(OperationMessage));
-  for (uint16_t i = 0; i < source->endOperations_count; i++)
-  {
-    operation_copy(&target->endOperations[i], source->endOperations[i]);
-  }
-}
 
 static void setAnimationProperties(Animation *animation, AnimationPropsMessage *props)
 {
@@ -75,9 +48,7 @@ static void setAnimationProperties(Animation *animation, AnimationPropsMessage *
   animation_set_implementation(animation, &impl);
 }
 
-static Animation **registerAnimations(
-    const char *nodeId,
-    AnimationPropsMessage *props)
+static Animation **createAnimations(AnimationPropsMessage *props)
 {
   // Create the arrays to hold the values
   Animation **animations = calloc(props->startOperations_count, sizeof(Animation *));
@@ -88,8 +59,6 @@ static Animation **registerAnimations(
     // Setup
     setAnimationProperties(animation, props);
     // Save hashmaps
-    // Need to copy or the memory on stack will get freed
-    // need to rememember to deallocate this later
     OperationMessage *startCopy = malloc(sizeof(OperationMessage));
     hash_add(startHashMap, animation, operation_copy(startCopy, props->startOperations[i]));
     OperationMessage *endCopy = malloc(sizeof(OperationMessage));
@@ -103,6 +72,30 @@ static Animation **registerAnimations(
 
 static void handleAnimationTeardown(Animation *animation)
 {
+  if (hash_has(startHashMap, animation))
+  {
+    OperationMessage *startOperation = (OperationMessage *)hash_get(startHashMap, animation);
+
+    // Need to call proper reconciler
+    free(startOperation->textLayerProps->alignment);
+    free(startOperation->textLayerProps->text);
+    free(startOperation->textLayerProps);
+    free(startOperation->nodeId);
+    free(startOperation);
+    hash_remove(startHashMap, animation);
+  }
+  if (hash_has(endHashMap, animation))
+  {
+    OperationMessage *endOperation = (OperationMessage *)hash_get(endHashMap, animation);
+
+    // Need to call proper reconciler
+    free(endOperation->textLayerProps->alignment);
+    free(endOperation->textLayerProps->text);
+    free(endOperation->textLayerProps);
+    free(endOperation->nodeId);
+    free(endOperation);
+    hash_remove(endHashMap, animation);
+  }
 }
 
 static void handleAnimationUpdate(Animation *animation, const AnimationProgress progress)
@@ -132,25 +125,19 @@ static void appendChild(
     AnimationPropsMessage *props)
 {
   // Animations
-  uint16_t *animationsLength = malloc(sizeof(uint16_t));
-  *animationsLength = props->startOperations_count;
+  uint16_t animationsLength = props->startOperations_count;
 
-  Animation **animations = registerAnimations(nodeId, props);
-
-  // Saving on registry for later use (commitUpdate and removeChild)
-  dict_add(animationsLengthRegistry, nodeId, animationsLength);
-  dict_add(animationsRegistry, nodeId, animations);
-
+  Animation **animations = createAnimations(props);
   Animation *composed;
 
   // Sequence?
   if (props->sequence)
   {
-    composed = animation_sequence_create_from_array(animations, *animationsLength);
+    composed = animation_sequence_create_from_array(animations, animationsLength);
   }
   else
   {
-    composed = animation_spawn_create_from_array(animations, *animationsLength);
+    composed = animation_spawn_create_from_array(animations, animationsLength);
   }
 
   // Loop?
@@ -159,8 +146,19 @@ static void appendChild(
     animation_set_play_count(composed, ANIMATION_DURATION_INFINITE);
   }
 
+  AnimationInfo *animationInfo = malloc(sizeof(AnimationInfo));
+
+  animationInfo->animations = animations;
+  animationInfo->length = animationsLength;
+
+  // Saving on registry for later use (commitUpdate and removeChild)
+  dict_add(animationsRegistry, nodeId, animationInfo);
+
   // Schedule animation
   animation_schedule(composed);
+
+  free(props->endOperations);
+  free(props->startOperations);
 }
 
 static void commitUpdate(
@@ -179,28 +177,31 @@ static void commitUpdate(
   // }
 }
 
-static void removeChild(
-    const uint16_t nodeType,
-    const char *nodeId)
+static void removeChild(const char *nodeId, bool removeFromRegistry)
 {
-  Animation **animations = (Animation **)dict_get(animationsRegistry, nodeId);
-  uint16_t *animationsLength = (uint16_t *)dict_get(animationsLengthRegistry, nodeId);
+  AnimationInfo *animationInfo = (AnimationInfo *)dict_get(animationsRegistry, nodeId);
 
-  for (uint16_t i = 0; i < *animationsLength; i++)
+  Animation **animations = animationInfo->animations;
+  uint16_t animationsLength = animationInfo->length;
+
+  for (uint16_t i = 0; i < animationsLength; i++)
   {
+    handleAnimationTeardown(animations[i]);
+
     if (animation_is_scheduled(animations[i]))
     {
-      handleAnimationTeardown(animations[i]);
       animation_unschedule(animations[i]);
       animation_destroy(animations[i]);
     }
   }
 
-  dict_remove(animationsRegistry, nodeId);
-  dict_remove(animationsLengthRegistry, nodeId);
-
   free(animations);
-  free(animationsLength);
+  free(animationInfo);
+
+  if (removeFromRegistry)
+  {
+    dict_remove(animationsRegistry, nodeId);
+  }
 }
 
 // Public
@@ -208,18 +209,22 @@ static void removeChild(
 void animation_reconciler_init()
 {
   animationsRegistry = dict_new();
-  animationsLengthRegistry = dict_new();
 
   startHashMap = hash_new();
   endHashMap = hash_new();
+}
+
+static void freeRegistryEntry(char *key, void *value)
+{
+  removeChild(key, false);
 }
 
 void animation_reconciler_deinit()
 {
   animation_unschedule_all();
 
+  dict_foreach(animationsRegistry, freeRegistryEntry);
   dict_free(animationsRegistry);
-  dict_free(animationsLengthRegistry);
 
   hash_free(startHashMap);
   hash_free(endHashMap);
@@ -246,7 +251,7 @@ void animation_reconciler(
     commitUpdate(nodeType, nodeId, props);
     break;
   case OPERATION_REMOVE_CHILD:
-    removeChild(nodeType, nodeId);
+    removeChild(nodeId, true);
     break;
   default:
     break;

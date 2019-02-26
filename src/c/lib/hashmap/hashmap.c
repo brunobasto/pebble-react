@@ -74,7 +74,6 @@ void hash_remove(PebbleHashMap *hashmap, void *key)
                 previous->tail = hashmap->tail;
                 free(hashmap->head);
                 hashmap->head = NULL;
-                free(hashmap);
             }
             else
             {
