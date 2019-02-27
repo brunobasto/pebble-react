@@ -65,6 +65,8 @@ static Animation **createAnimations(AnimationPropsMessage *props)
     hash_add(endHashMap, animation, operation_copy(endCopy, props->endOperations[i]));
     // Add to array
     animations[i] = animation;
+
+    animation_schedule(animation);
   }
 
   return animations;
@@ -96,6 +98,8 @@ static void handleAnimationTeardown(Animation *animation)
     free(endOperation);
     hash_remove(endHashMap, animation);
   }
+
+  animation_destroy(animation);
 }
 
 static void handleAnimationUpdate(Animation *animation, const AnimationProgress progress)
@@ -120,7 +124,6 @@ static void handleAnimationUpdate(Animation *animation, const AnimationProgress 
 }
 
 static void appendChild(
-    const uint16_t nodeType,
     const char *nodeId,
     AnimationPropsMessage *props)
 {
@@ -128,23 +131,22 @@ static void appendChild(
   uint16_t animationsLength = props->startOperations_count;
 
   Animation **animations = createAnimations(props);
-  Animation *composed;
 
-  // Sequence?
-  if (props->sequence)
-  {
-    composed = animation_sequence_create_from_array(animations, animationsLength);
-  }
-  else
-  {
-    composed = animation_spawn_create_from_array(animations, animationsLength);
-  }
+  // // Sequence?
+  // if (props->sequence)
+  // {
+  //   composed = animation_sequence_create_from_array(animations, animationsLength);
+  // }
+  // else
+  // {
+  //   composed = animation_spawn_create_from_array(animations, animationsLength);
+  // }
 
   // Loop?
-  if (props->loop)
-  {
-    animation_set_play_count(composed, ANIMATION_DURATION_INFINITE);
-  }
+  // if (props->loop)
+  // {
+  //   animation_set_play_count(composed, ANIMATION_DURATION_INFINITE);
+  // }
 
   AnimationInfo *animationInfo = malloc(sizeof(AnimationInfo));
 
@@ -154,27 +156,8 @@ static void appendChild(
   // Saving on registry for later use (commitUpdate and removeChild)
   dict_add(animationsRegistry, nodeId, animationInfo);
 
-  // Schedule animation
-  animation_schedule(composed);
-
   free(props->endOperations);
   free(props->startOperations);
-}
-
-static void commitUpdate(
-    const uint16_t nodeType,
-    const char *nodeId,
-    AnimationPropsMessage *props)
-{
-  // Animation **animations = (Animation **)dict_get(animationsRegistry, nodeId);
-  // uint16_t *animationsLength = (uint16_t *)dict_get(animationsLengthRegistry, nodeId);
-
-  // for (uint16_t i = 0; i < *animationsLength; i++)
-  // {
-  //   animation_unschedule(animations[i]);
-  //   setAnimationProperties(animations[i], props);
-  //   animation_schedule(animations[i]);
-  // }
 }
 
 static void removeChild(const char *nodeId, bool removeFromRegistry)
@@ -186,13 +169,8 @@ static void removeChild(const char *nodeId, bool removeFromRegistry)
 
   for (uint16_t i = 0; i < animationsLength; i++)
   {
-    handleAnimationTeardown(animations[i]);
-
     if (animation_is_scheduled(animations[i]))
-    {
       animation_unschedule(animations[i]);
-      animation_destroy(animations[i]);
-    }
   }
 
   free(animations);
@@ -202,6 +180,14 @@ static void removeChild(const char *nodeId, bool removeFromRegistry)
   {
     dict_remove(animationsRegistry, nodeId);
   }
+}
+
+static void commitUpdate(
+    const char *nodeId,
+    AnimationPropsMessage *props)
+{
+  removeChild(nodeId, true);
+  appendChild(nodeId, props);
 }
 
 // Public
@@ -221,8 +207,6 @@ static void freeRegistryEntry(char *key, void *value)
 
 void animation_reconciler_deinit()
 {
-  animation_unschedule_all();
-
   dict_foreach(animationsRegistry, freeRegistryEntry);
   dict_free(animationsRegistry);
 
@@ -245,10 +229,10 @@ void animation_reconciler(
   switch (operation)
   {
   case OPERATION_APPEND_CHILD:
-    appendChild(nodeType, nodeId, props);
+    appendChild(nodeId, props);
     break;
   case OPERATION_COMMIT_UPDATE:
-    commitUpdate(nodeType, nodeId, props);
+    commitUpdate(nodeId, props);
     break;
   case OPERATION_REMOVE_CHILD:
     removeChild(nodeId, true);

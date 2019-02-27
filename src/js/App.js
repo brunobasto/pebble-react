@@ -1,11 +1,13 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
+
+const letterWidth = 29;
 
 class App extends Component {
     state = {what: 'React'};
 
     componentDidMount() {
         Pebble.addEventListener("appmessage", (e) => {
-            this.setState({what: 'Pebble'});
+            // this.setState({what: 'Pebble'});
         });
     }
 
@@ -13,47 +15,45 @@ class App extends Component {
         const {what} = this.state;
 
         return (
-            <window name="some">
+            <Fragment>
                 <animation
                     animationProps={{
                         top: {
                             start: -30,
-                            end: 40
+                            end: 140
                         }
                     }}
-                    duration={1750}
+                    duration={1500}
                 >
                     <text
                         alignment="center"
                         height={30}
-                        left={20}
-                        top={-30}
-                        width={120}
+                        width={130}
                     >
-                        {what}
+                        {'React'}
                     </text>
                 </animation>
                 {'Rocks'.split('').map((letter, index) => (
                     <animation
                         animationProps={{
                             left: {
-                                start: -25,
-                                end: (index * 25)
+                                start: letterWidth * -1,
+                                end: (index * letterWidth)
                             }
                         }}
                         duration={1500}
+                        key={`${index}anim`}
                     >
                         <text
+                            alignment="center"
                             height={30}
-                            left={-25}
-                            top={120}
-                            width={25}
+                            width={letterWidth}
                         >
                             {letter}
                         </text>
                     </animation>
                 ))}
-            </window>
+            </Fragment>
         );
     }
 }
