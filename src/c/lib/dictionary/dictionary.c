@@ -31,8 +31,7 @@ void dict_add(PebbleDictionary *dictionary, const char *key, void *value)
         {
             dictionary = dictionary->tail;
         }
-        PebbleDictionary *next = dict_new();
-        dictionary->tail = next;
+        dictionary->tail = dict_new();
         dictionary = dictionary->tail;
     }
     dictionary->head = (KVPair *)malloc(sizeof(KVPair));
@@ -85,8 +84,9 @@ void *dict_get(PebbleDictionary *dictionary, const char *key)
         return 0;
     while (dictionary != NULL)
     {
-        if (strcmp(dictionary->head->key, key) == 0)
+        if (strcmp(dictionary->head->key, key) == 0) {
             return dictionary->head->value;
+        }
         dictionary = dictionary->tail;
     }
     return 0;
@@ -110,6 +110,7 @@ void dict_remove(PebbleDictionary *dictionary, const char *key)
                 dictionary->head->key = NULL;
                 free(dictionary->head);
                 dictionary->head = NULL;
+                free(dictionary);
             }
             else
             {
@@ -149,10 +150,7 @@ void dict_free(PebbleDictionary *dictionary)
             free(dictionary->head->key);
         free(dictionary->head);
     }
-    if (dictionary->tail != NULL)
-    {
-        dict_free(dictionary->tail);
-    }
 
+    dict_free(dictionary->tail);
     free(dictionary);
 }

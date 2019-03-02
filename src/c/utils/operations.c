@@ -7,7 +7,6 @@ OperationMessage *operation_copy(OperationMessage *copy, OperationMessage operat
 {
   copy->nodeId = calloc(strlen(operation.nodeId) + 1, sizeof(char));
   strcpy(copy->nodeId, operation.nodeId);
-  free(operation.nodeId);
   copy->nodeType = operation.nodeType;
   copy->operation = operation.operation;
 
@@ -17,15 +16,18 @@ OperationMessage *operation_copy(OperationMessage *copy, OperationMessage operat
   {
     copy->textLayerProps = malloc(sizeof(TextLayerPropsMessage));
     copy->textLayerProps->alignment = NULL;
+    copy->textLayerProps->layerProps = NULL;
     copy->textLayerProps->text = NULL;
 
     text_layer_reconciler_merge_props(copy->textLayerProps, operation.textLayerProps, true);
-    free(operation.textLayerProps);
   }
   break;
   default:
     break;
   }
+
+  operation.operation = OPERATION_CLEAR_PROPS;
+  operations_process_unit(NULL, &operation);
 
   return copy;
 }
@@ -44,16 +46,28 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
   {
     TextLayerPropsMessage *props = operationMessage->textLayerProps;
 
-    text_layer_reconciler(windowLayer, operation, nodeType, nodeId, props);
-    free(props);
+    text_layer_reconciler(windowLayer, operationMessage);
+
+    // Makes sure we clear after ourselves
+    if (operation != OPERATION_CLEAR_PROPS)
+    {
+      operationMessage->operation = OPERATION_CLEAR_PROPS;
+      text_layer_reconciler(NULL, operationMessage);
+    }
   }
   break;
   case NODE_TYPE_ANIMATION:
   {
     AnimationPropsMessage *props = operationMessage->animationProps;
 
-    animation_reconciler(windowLayer, operation, nodeType, nodeId, props);
-    free(props);
+    animation_reconciler(windowLayer, operationMessage);
+
+    // Makes sure we clear after ourselves
+    if (operation != OPERATION_CLEAR_PROPS)
+    {
+      operationMessage->operation = OPERATION_CLEAR_PROPS;
+      animation_reconciler(NULL, operationMessage);
+    }
   }
   default:
     break;

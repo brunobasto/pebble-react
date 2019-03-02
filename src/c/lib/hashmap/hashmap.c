@@ -2,6 +2,10 @@
 
 #include "hashmap.h"
 
+typedef void (*HashForeachCall)(void *key, void *value);
+
+static HashForeachCall callHashForeach = NULL;
+
 PebbleHashMap *hash_new()
 {
     PebbleHashMap *hashmap = (PebbleHashMap *)malloc(sizeof(PebbleHashMap));
@@ -32,14 +36,32 @@ void hash_add(PebbleHashMap *hashmap, void *key, void *value)
     hashmap->head->value = value;
 }
 
+void hash_foreach(PebbleHashMap *hashmap, void *callback)
+{
+    if (hashmap == NULL)
+    {
+        return;
+    }
+    if (hashmap->head == NULL)
+    {
+        return;
+    }
+    callHashForeach = (HashForeachCall)callback;
+    callHashForeach(hashmap->head->key, hashmap->head->value);
+    hash_foreach(hashmap->tail, callback);
+}
+
 int hash_has(PebbleHashMap *hashmap, void *key)
 {
     if (hashmap->head == NULL)
         return 0;
     while (hashmap != NULL)
     {
-        if (hashmap->head->key == key)
+        if (hashmap->head != NULL && hashmap->head->key == key)
+        {
             return 1;
+        }
+
         hashmap = hashmap->tail;
     }
     return 0;
@@ -103,11 +125,15 @@ void hash_free(PebbleHashMap *hashmap)
 {
     if (hashmap == NULL)
         return;
-    if (hashmap->head != NULL) {
+    if (hashmap->head != NULL)
+    {
         free(hashmap->head);
+        hashmap->head = NULL;
     }
-    if (hashmap->tail != NULL) {
+    if (hashmap->tail != NULL)
+    {
         hash_free(hashmap->tail);
     }
+
     free(hashmap);
 }

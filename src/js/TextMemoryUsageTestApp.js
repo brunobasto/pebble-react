@@ -4,12 +4,6 @@ class App extends Component {
     state = { show: true, what: 'React' };
 
     componentDidMount() {
-        // setTimeout(
-        //     () => {
-        //         this.setState({ show: false });
-        //     },
-        //     2000
-        // );
         Pebble.addEventListener(
             'appmessage',
             (e) => {
@@ -23,24 +17,18 @@ class App extends Component {
     }
 
     render() {
-        const { show, what } = this.state;
+        const { what } = this.state;
 
         return (
-            show && (
-                <Fragment>
-                    {what.split('').map((letter, index) => (
-                        <text
-                            alignment={'center'}
-                            height={30}
-                            left={index * 29}
-                            top={50}
-                            width={29}
-                        >
-                            {letter}
-                        </text>
-                ))}
-                </Fragment>
-            )
+            <text
+                alignment={'center'}
+                height={30}
+                left={0 * 29}
+                top={50}
+                width={129}
+            >
+                {what}
+            </text>
         );
     }
 }

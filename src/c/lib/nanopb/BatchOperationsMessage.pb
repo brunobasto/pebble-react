@@ -1,22 +1,26 @@
 
-Þ	
-BatchOperationsMessage.protonanopb.proto"¡
-TextLayerPropsMessage#
-	alignment (	B’?R	alignment
-height (B’?8Rheight
-left (B’?8Rleft
-text (	B’?Rtext
-top (B’?8Rtop
-width (B’?8Rwidth*
-alignmentChanged (RalignmentChanged$
-heightChanged (RheightChanged 
-leftChanged	 (RleftChanged 
-textChanged
- (RtextChanged
+˜
+BatchOperationsMessage.protonanopb.proto"
+LayerPropsMessage
+height (B’?8Rheight
+left (B’?8Rleft
+top (B’?8Rtop
+width (B’?8Rwidth$
+heightChanged (RheightChanged 
+leftChanged (RleftChanged
 
-topChanged (R
+topChanged (R
 topChanged"
-widthChanged (RwidthChanged"¥
+widthChanged (RwidthChanged"Ž
+TextLayerPropsMessage#
+	alignment (	B’?R	alignment
+text (	B’?Rtext9
+
+layerProps (2.LayerPropsMessageB’?R
+layerProps*
+alignmentChanged (RalignmentChanged 
+textChanged (RtextChanged,
+layerPropsChanged (RlayerPropsChanged"¥
 AnimationPropsMessage
 loop (Rloop
 sequence (Rsequence>
@@ -28,13 +32,16 @@ topChanged"
 delayChanged (RdelayChanged 
 loopChanged	 (RloopChanged(
 sequenceChanged
- (RsequenceChanged"‡
+ (RsequenceChanged"Â
 OperationMessage#
 	operation (B’?8R	operation!
 nodeType (B’?8RnodeType
 nodeId (	B’?RnodeIdE
 textLayerProps (2.TextLayerPropsMessageB’?RtextLayerPropsE
-animationProps (2.AnimationPropsMessageB’?RanimationProps"R
+animationProps (2.AnimationPropsMessageB’?RanimationProps9
+
+layerProps (2.LayerPropsMessageB’?R
+layerProps"R
 BatchOperationsMessage8
 
 operations (2.OperationMessageB’?R

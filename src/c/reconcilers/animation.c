@@ -10,12 +10,12 @@
 
 static PebbleDictionary *animationsRegistry;
 
-static PebbleHashMap *startHashMap;
-static PebbleHashMap *endHashMap;
+static PebbleHashMap *operationsHashMap;
 
 typedef void (*AnimationCallback)(
     OperationMessage *startOperation,
     OperationMessage *endOperation,
+    OperationMessage *resultOperation,
     int percent);
 
 typedef struct _AnimationInfo
@@ -24,6 +24,13 @@ typedef struct _AnimationInfo
   uint8_t length;
 
 } AnimationInfo;
+
+typedef struct _AnimationOperationsInfo
+{
+  OperationMessage *startOperation;
+  OperationMessage *endOperation;
+
+} AnimationOperationsInfo;
 
 static AnimationCallback callAnimationCallback = NULL;
 
@@ -58,14 +65,18 @@ static Animation **createAnimations(AnimationPropsMessage *props)
     Animation *animation = animation_create();
     // Setup
     setAnimationProperties(animation, props);
-    // Save hashmaps
+    // Save to hashmap
     OperationMessage *startCopy = malloc(sizeof(OperationMessage));
-    hash_add(startHashMap, animation, operation_copy(startCopy, props->startOperations[i]));
     OperationMessage *endCopy = malloc(sizeof(OperationMessage));
-    hash_add(endHashMap, animation, operation_copy(endCopy, props->endOperations[i]));
+
+    AnimationOperationsInfo *info = malloc(sizeof(AnimationOperationsInfo));
+    info->startOperation = operation_copy(startCopy, props->startOperations[i]);
+    info->endOperation = operation_copy(endCopy, props->endOperations[i]);
+
+    hash_add(operationsHashMap, animation, info);
     // Add to array
     animations[i] = animation;
-
+    // Schedule
     animation_schedule(animation);
   }
 
@@ -74,29 +85,22 @@ static Animation **createAnimations(AnimationPropsMessage *props)
 
 static void handleAnimationTeardown(Animation *animation)
 {
-  if (hash_has(startHashMap, animation))
-  {
-    OperationMessage *startOperation = (OperationMessage *)hash_get(startHashMap, animation);
+  AnimationOperationsInfo *info = (AnimationOperationsInfo *)hash_get(operationsHashMap, animation);
 
-    // Need to call proper reconciler
-    free(startOperation->textLayerProps->alignment);
-    free(startOperation->textLayerProps->text);
-    free(startOperation->textLayerProps);
-    free(startOperation->nodeId);
+  if (info)
+  {
+    OperationMessage *startOperation = info->startOperation;
+    startOperation->operation = OPERATION_CLEAR_PROPS;
+    operations_process_unit(NULL, startOperation);
     free(startOperation);
-    hash_remove(startHashMap, animation);
-  }
-  if (hash_has(endHashMap, animation))
-  {
-    OperationMessage *endOperation = (OperationMessage *)hash_get(endHashMap, animation);
 
-    // Need to call proper reconciler
-    free(endOperation->textLayerProps->alignment);
-    free(endOperation->textLayerProps->text);
-    free(endOperation->textLayerProps);
-    free(endOperation->nodeId);
+    OperationMessage *endOperation = info->endOperation;
+    endOperation->operation = OPERATION_CLEAR_PROPS;
+    operations_process_unit(NULL, endOperation);
     free(endOperation);
-    hash_remove(endHashMap, animation);
+
+    hash_remove(operationsHashMap, animation);
+    free(info);
   }
 
   animation_destroy(animation);
@@ -104,11 +108,12 @@ static void handleAnimationTeardown(Animation *animation)
 
 static void handleAnimationUpdate(Animation *animation, const AnimationProgress progress)
 {
+  AnimationOperationsInfo *info = (AnimationOperationsInfo *)hash_get(operationsHashMap, animation);
   // Return if, for some reason, we can't find info about the current animation.
   if (
       animation == NULL ||
-      !animation_is_scheduled(animation) ||
-      !hash_has(startHashMap, animation))
+      !info ||
+      !animation_is_scheduled(animation))
   {
     return;
   }
@@ -116,11 +121,20 @@ static void handleAnimationUpdate(Animation *animation, const AnimationProgress 
   // Calculate current percentage
   int percent = ((int)progress * 100) / ANIMATION_NORMALIZED_MAX;
 
-  OperationMessage *startOperation = (OperationMessage *)hash_get(startHashMap, animation);
-  OperationMessage *endOperation = (OperationMessage *)hash_get(endHashMap, animation);
+  OperationMessage *startOperation = info->startOperation;
+  OperationMessage *endOperation = info->endOperation;
+  OperationMessage *resultOperation = malloc(sizeof(OperationMessage));
+  resultOperation->operation = OPERATION_COMMIT_UPDATE;
+  resultOperation->nodeType = startOperation->nodeType;
+  resultOperation->nodeId = calloc(strlen(startOperation->nodeId) + 1, sizeof(char));
+  strcpy(resultOperation->nodeId, startOperation->nodeId);
 
   callAnimationCallback = animation_registry_get_callback(startOperation->nodeType);
-  callAnimationCallback(startOperation, endOperation, percent);
+  callAnimationCallback(startOperation, endOperation, resultOperation, percent);
+
+  operations_process_unit(NULL, resultOperation);
+
+  free(resultOperation);
 }
 
 static void appendChild(
@@ -195,9 +209,7 @@ static void commitUpdate(
 void animation_reconciler_init()
 {
   animationsRegistry = dict_new();
-
-  startHashMap = hash_new();
-  endHashMap = hash_new();
+  operationsHashMap = hash_new();
 }
 
 static void freeRegistryEntry(char *key, void *value)
@@ -209,24 +221,27 @@ void animation_reconciler_deinit()
 {
   dict_foreach(animationsRegistry, freeRegistryEntry);
   dict_free(animationsRegistry);
+  hash_free(operationsHashMap);
+}
 
-  hash_free(startHashMap);
-  hash_free(endHashMap);
+static void clearProps(AnimationPropsMessage *props) {
+  free(props);
 }
 
 void animation_reconciler(
     Layer *parentLayer,
-    const uint16_t operation,
-    const uint16_t nodeType,
-    const char *nodeId,
-    AnimationPropsMessage *props)
+    OperationMessage *operationMessage)
 {
+  uint8_t nodeType = operationMessage->nodeType;
+  AnimationPropsMessage *props = operationMessage->animationProps;
+  char *nodeId = operationMessage->nodeId;
+
   if (nodeType != NODE_TYPE_ANIMATION)
   {
     return;
   }
 
-  switch (operation)
+  switch (operationMessage->operation)
   {
   case OPERATION_APPEND_CHILD:
     appendChild(nodeId, props);
@@ -236,6 +251,9 @@ void animation_reconciler(
     break;
   case OPERATION_REMOVE_CHILD:
     removeChild(nodeId, true);
+    break;
+  case OPERATION_CLEAR_PROPS:
+    clearProps(props);
     break;
   default:
     break;

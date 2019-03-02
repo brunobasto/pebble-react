@@ -7,7 +7,7 @@ class App extends Component {
 
     componentDidMount() {
         Pebble.addEventListener("appmessage", (e) => {
-            // this.setState({what: 'Pebble'});
+            this.setState({what: 'Pebble'});
         });
     }
 
@@ -20,17 +20,18 @@ class App extends Component {
                     animationProps={{
                         top: {
                             start: -30,
-                            end: 140
+                            end: 10
                         }
                     }}
-                    duration={1500}
+                    duration={750}
                 >
                     <text
                         alignment="center"
                         height={30}
+                        top={-30}
                         width={130}
                     >
-                        {'React'}
+                        {what}
                     </text>
                 </animation>
                 {'Rocks'.split('').map((letter, index) => (
@@ -41,12 +42,14 @@ class App extends Component {
                                 end: (index * letterWidth)
                             }
                         }}
-                        duration={1500}
+                        duration={750}
                         key={`${index}anim`}
                     >
                         <text
                             alignment="center"
                             height={30}
+                            left={letterWidth * -1}
+                            top={65}
                             width={letterWidth}
                         >
                             {letter}

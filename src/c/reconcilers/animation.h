@@ -10,7 +10,4 @@ void animation_reconciler_deinit();
 
 void animation_reconciler(
     Layer *parentLayer,
-    const uint16_t operation,
-    const uint16_t nodeType,
-    const char *nodeId,
-    AnimationPropsMessage *props);
+    OperationMessage *operationMessage);

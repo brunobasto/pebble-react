@@ -12,6 +12,7 @@ typedef struct PebbleHashMap_t {
 
 PebbleHashMap* hash_new();
 void hash_add(PebbleHashMap *hashmap, void *key, void *value);
+void hash_foreach(PebbleHashMap *hashmap, void *callback);
 int hash_has(PebbleHashMap *hashmap, void *key);
 void * hash_get(PebbleHashMap *hashmap, void *key);
 void hash_remove(PebbleHashMap *hashmap, void *key);

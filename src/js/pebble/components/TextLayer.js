@@ -10,17 +10,17 @@ class TextLayer extends Layer {
     }
 
     getPropsMessage(props) {
+        const diff = this.getPropsDiff(props);
+
         return {
             textLayerProps: TextLayerPropsMessage.create(
                 {
                     ...props,
-                    alignmentChanged: props.hasOwnProperty('alignment'),
-                    heightChanged: props.hasOwnProperty('height'),
-                    leftChanged: props.hasOwnProperty('left'),
+                    ...super.getPropsMessage(props),
+                    ...diff,
+                    layerPropsChanged: true,
                     text: props.children,
-                    textChanged: props.hasOwnProperty('children'),
-                    topChanged: props.hasOwnProperty('top'),
-                    widthChanged: props.hasOwnProperty('width')
+                    textChanged: diff.childrenChanged
                 }
             )
         }

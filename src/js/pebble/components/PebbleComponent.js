@@ -76,6 +76,16 @@ class PebbleComponent {
         );
     }
 
+    getPropsDiff(props) {
+        const diff = {};
+
+        for (const name in props) {
+            diff[`${name}Changed`] = 1;
+        }
+
+        return diff;
+    }
+
     hasGetter(component, prop) {
         let proto = Object.getPrototypeOf(component);
 
