@@ -72,7 +72,7 @@ export const flushMessages = async () => {
             },
             () => {
                 busy = false;
-                console.log('Successfully sent', array, 'with ', array.length);
+                console.log(`Successfully sent ${array.length} bytes.`);
                 queue.length = 0;
             },
             () => {
