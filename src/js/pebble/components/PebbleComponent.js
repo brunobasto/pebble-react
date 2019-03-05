@@ -9,7 +9,7 @@ let idCounter = 0;
 
 class PebbleComponent {
     constructor(props, nodeType) {
-        this.props = props;
+        this.props = {...props};
         this.uniqueId = `${nodeType}${++idCounter}`;
         this.nodeType = nodeType;
         this._children = [];
@@ -50,7 +50,23 @@ class PebbleComponent {
 
     prepareUpdate(oldProps, newProps) {
         for (const key in newProps) {
-            if (oldProps[key] !== newProps[key]) {
+            if (oldProps[key] === newProps[key]) {
+                continue;
+            }
+            else if (typeof oldProps[key] !== typeof newProps[key]) {
+                return true;
+            }
+            else if (Array.isArray(oldProps[key]) && Array.isArray(newProps[key])) {
+
+            }
+            else if (
+                key == 'children' &&
+                typeof newProps[key] === 'string' &&
+                newProps[key] !== oldProps[key]
+            ) {
+                return true;
+            }
+            else if (typeof newProps[key] === 'object' && this.prepareUpdate(oldProps[key], newProps[key])) {
                 return true;
             }
         }
