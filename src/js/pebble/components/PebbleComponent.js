@@ -49,24 +49,35 @@ class PebbleComponent {
     }
 
     prepareUpdate(oldProps, newProps) {
+        if (oldProps === newProps) {
+            return false;
+        }
+
         for (const key in newProps) {
-            if (oldProps[key] === newProps[key]) {
+            if (typeof oldProps[key] !== typeof newProps[key]) {
+                return true;
+            }
+            else if (oldProps[key] === newProps[key]) {
                 continue;
             }
-            else if (typeof oldProps[key] !== typeof newProps[key]) {
+            else if (Array.isArray(oldProps[key]) && Array.isArray(newProps[key])) {
                 return true;
             }
-            else if (Array.isArray(oldProps[key]) && Array.isArray(newProps[key])) {
-
+            else if (key == 'children') {
+                if (
+                    typeof newProps[key] === 'string' &&
+                    newProps[key] !== oldProps[key]
+                ) {
+                    return true;
+                }
+                else {
+                    continue;
+                }
             }
             else if (
-                key == 'children' &&
-                typeof newProps[key] === 'string' &&
-                newProps[key] !== oldProps[key]
+                typeof oldProps[key] === 'object' &&
+                this.prepareUpdate(oldProps[key], newProps[key])
             ) {
-                return true;
-            }
-            else if (typeof newProps[key] === 'object' && this.prepareUpdate(oldProps[key], newProps[key])) {
                 return true;
             }
         }
