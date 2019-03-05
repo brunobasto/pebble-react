@@ -105,10 +105,6 @@ class Animation extends PebbleComponent {
     isSequence(animationProps) {
         return Array.isArray(animationProps) ? 1 : 0;
     }
-
-    shouldSerializeProp() {
-        return true;
-    }
 }
 
 export default Animation;

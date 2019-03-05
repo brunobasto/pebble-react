@@ -86,34 +86,6 @@ class PebbleComponent {
         return diff;
     }
 
-    hasGetter(component, prop) {
-        let proto = Object.getPrototypeOf(component);
-
-        while (proto != null) {
-            let descriptor = Object.getOwnPropertyDescriptor(proto, prop);
-
-            if (descriptor && descriptor.get) {
-                return true;
-            }
-
-            proto = Object.getPrototypeOf(proto);
-        }
-
-        return false;
-    }
-
-    shouldSerializeProp(prop) {
-        if (prop === 'children') {
-            return false;
-        }
-
-        return true;
-    }
-
-    getInternalProps() {
-        return {};
-    }
-
     getPropsMessage() {
         throw new Error('Every component should implement getPropsMessage(props)');
     }

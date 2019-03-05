@@ -47,7 +47,6 @@ class App extends Component {
                     duration={750}
                 >
                     <text
-                        alignment="center"
                         height={30}
                         top={-30}
                         width={144}
@@ -65,10 +64,8 @@ class App extends Component {
                             }
                         }}
                         duration={2000}
-                        key={`${index}anim`}
                     >
                         <text
-                            alignment="center"
                             height={30}
                             left={index % 2 == 0 ? letterWidth * -1 : 200}
                             top={65}

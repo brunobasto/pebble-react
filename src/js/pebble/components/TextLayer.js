@@ -5,10 +5,6 @@ import protoJSON from './../../proto.json'
 const { TextLayerPropsMessage } = protobuf.Root.fromJSON(protoJSON);
 
 class TextLayer extends Layer {
-    get children() {
-        return this.props.children;
-    }
-
     getPropsMessage(props) {
         const diff = this.getPropsDiff(props);
 
@@ -24,10 +20,6 @@ class TextLayer extends Layer {
                 }
             )
         }
-    }
-
-    shouldSerializeProp() {
-        return true;
     }
 }
 
