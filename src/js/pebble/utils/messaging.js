@@ -1,5 +1,6 @@
 import protobuf from 'protobufjs';
 import protoJSON from './../../proto.json'
+import { Operations } from './constants.js';
 const { BatchOperationsMessage, OperationMessage } = protobuf.Root.fromJSON(protoJSON);
 
 const insistence = 5.
@@ -34,10 +35,36 @@ export const nextMessage = () => {
     return isEmpty() ? {} : queue[0];
 }
 
-const serializeMessage = (message) => {
-    const json = JSON.stringify(message);
+const getParentMessage = (message, queue) => {
+    return queue.find(m => m.nodeId === message.parentNodeId);
+}
 
-    return json;
+const reorderMessageQueue = (queue) => {
+    const added = {};
+    const newQueue = [];
+
+    for (const index in queue) {
+        const message = queue[index];
+
+        if (message.operation === Operations.appendChild) {
+            const parentMessage = getParentMessage(message, queue);
+
+            if (parentMessage && !added[parentMessage.nodeId]) {
+                newQueue.push(parentMessage);
+                added[parentMessage.nodeId] = true;
+            }
+
+            if (!added[message.nodeId]) {
+                newQueue.push(message);
+                added[message.nodeId] = true;
+            }
+        }
+        else {
+            newQueue.push(message);
+        }
+    }
+
+    return newQueue;
 }
 
 export const enqueueMessage = (message) => {
@@ -54,11 +81,11 @@ export const flushMessages = async () => {
 
         // console.log('Queue length', queue, queue.length);
 
-        let batchOperationMessage = BatchOperationsMessage.create({ operations: queue });
+        let batchOperationMessage = BatchOperationsMessage.create({ operations: reorderMessageQueue(queue) });
 
         let buffer = BatchOperationsMessage.encode(batchOperationMessage).finish();
-        // let decoded = BatchOperationsMessage.decode(buffer);
-        // console.log(decoded);
+        let decoded = BatchOperationsMessage.decode(buffer);
+        console.log(decoded);
 
         var array = [];
         for (var i = 0; i < buffer.byteLength; i++) {

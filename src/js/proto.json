@@ -195,30 +195,37 @@
             "(nanopb).type": "FT_POINTER"
           }
         },
+        "parentNodeId": {
+          "type": "string",
+          "id": 4,
+          "options": {
+            "(nanopb).type": "FT_POINTER"
+          }
+        },
         "textLayerProps": {
           "type": "TextLayerPropsMessage",
-          "id": 4,
+          "id": 5,
           "options": {
             "(nanopb).type": "FT_POINTER"
           }
         },
         "animationProps": {
           "type": "AnimationPropsMessage",
-          "id": 5,
+          "id": 6,
           "options": {
             "(nanopb).type": "FT_POINTER"
           }
         },
         "layerProps": {
           "type": "LayerPropsMessage",
-          "id": 6,
+          "id": 7,
           "options": {
             "(nanopb).type": "FT_POINTER"
           }
         },
         "circleLayerProps": {
           "type": "CircleLayerPropsMessage",
-          "id": 7,
+          "id": 8,
           "options": {
             "(nanopb).type": "FT_POINTER"
           }

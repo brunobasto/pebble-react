@@ -1,7 +1,7 @@
 import Reconciler from 'react-reconciler';
 import { createElement } from '../utils/createElement';
 import TextNode from '../components/TextNode';
-import { flushMessages, waitMessaging } from '../utils/messaging'
+import { flushMessages } from '../utils/messaging'
 
 export let ROOT_NODE = {};
 

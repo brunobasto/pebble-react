@@ -2,6 +2,7 @@ import { enqueueMessage } from '../utils/messaging'
 import { Operations } from '../utils/constants';
 import protobuf from 'protobufjs';
 import protoJSON from './../../proto.json'
+import Root from './Root';
 
 const { OperationMessage } = protobuf.Root.fromJSON(protoJSON);
 
@@ -10,7 +11,14 @@ let idCounter = 0;
 class PebbleComponent {
     constructor(props, nodeType) {
         this.props = {...props};
-        this.uniqueId = `${nodeType}${++idCounter}`;
+
+        if (this instanceof Root) {
+            this.uniqueId = `ROOT`;
+        }
+        else {
+            this.uniqueId = `${nodeType}${++idCounter}`;
+        }
+
         this.nodeType = nodeType;
         this._children = [];
     }
@@ -23,10 +31,13 @@ class PebbleComponent {
                         ...child.getPropsMessage(child.props),
                         operation: Operations.appendChild,
                         nodeType: child.nodeType,
-                        nodeId: child.uniqueId
+                        nodeId: child.uniqueId,
+                        parentNodeId: this.uniqueId
                     }
                 )
             );
+
+            child.parentNodeId = this.uniqueId;
         }
 
         this._children.push(child);
@@ -38,7 +49,8 @@ class PebbleComponent {
                 {
                     operation: Operations.removeChild,
                     nodeType: child.nodeType,
-                    nodeId: child.uniqueId
+                    nodeId: child.uniqueId,
+                    parentNodeId: this.uniqueId
                 }
             );
 
@@ -97,7 +109,8 @@ class PebbleComponent {
                     ...this.getPropsMessage(newProps),
                     operation: Operations.commitUpdate,
                     nodeType: this.nodeType,
-                    nodeId: this.uniqueId
+                    nodeId: this.uniqueId,
+                    parentNodeId: this.parentNodeId
                 }
             )
         );

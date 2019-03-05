@@ -69,6 +69,7 @@ class Animation extends PebbleComponent {
                         nodeId: child.uniqueId,
                         nodeType: child.nodeType,
                         operation: Operations.commitUpdate,
+                        parentNodeId: this.uniqueId,
                         ...child.getPropsMessage(props)
                     }
                 );
@@ -95,6 +96,7 @@ class Animation extends PebbleComponent {
                         nodeId: child.uniqueId,
                         nodeType: child.nodeType,
                         operation: Operations.commitUpdate,
+                        parentNodeId: this.uniqueId,
                         ...child.getPropsMessage(props)
                     }
                 );

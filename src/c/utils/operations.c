@@ -8,6 +8,8 @@ OperationMessage *operation_copy(OperationMessage *copy, OperationMessage operat
 {
   copy->nodeId = calloc(strlen(operation.nodeId) + 1, sizeof(char));
   strcpy(copy->nodeId, operation.nodeId);
+  copy->parentNodeId = calloc(strlen(operation.parentNodeId) + 1, sizeof(char));
+  strcpy(copy->parentNodeId, operation.parentNodeId);
   copy->nodeType = operation.nodeType;
   copy->operation = operation.operation;
 
@@ -90,6 +92,7 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
   }
 
   free(operationMessage->nodeId);
+  free(operationMessage->parentNodeId);
 
   // // Reconcilers
   // image_layer_reconciler(windowLayer, operation, nodeType, nodeId, propsDict);

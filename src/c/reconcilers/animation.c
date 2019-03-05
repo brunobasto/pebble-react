@@ -128,6 +128,8 @@ static void handleAnimationUpdate(Animation *animation, const AnimationProgress 
   resultOperation->nodeType = startOperation->nodeType;
   resultOperation->nodeId = calloc(strlen(startOperation->nodeId) + 1, sizeof(char));
   strcpy(resultOperation->nodeId, startOperation->nodeId);
+  resultOperation->parentNodeId = calloc(strlen(startOperation->parentNodeId) + 1, sizeof(char));
+  strcpy(resultOperation->parentNodeId, startOperation->parentNodeId);
 
   callAnimationCallback = animation_registry_get_callback(startOperation->nodeType);
   callAnimationCallback(startOperation, endOperation, resultOperation, percent);

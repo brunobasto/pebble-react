@@ -57,10 +57,11 @@ message OperationMessage {
    uint32 operation = 1 [(nanopb).int_size = IS_8];
    uint32 nodeType = 2 [(nanopb).int_size = IS_8];
    string nodeId = 3 [(nanopb).type = FT_POINTER];
-   TextLayerPropsMessage textLayerProps = 4 [(nanopb).type = FT_POINTER];
-   AnimationPropsMessage animationProps = 5 [(nanopb).type = FT_POINTER];
-   LayerPropsMessage layerProps = 6 [(nanopb).type = FT_POINTER];
-   CircleLayerPropsMessage circleLayerProps = 7 [(nanopb).type = FT_POINTER];
+   string parentNodeId = 4 [(nanopb).type = FT_POINTER];
+   TextLayerPropsMessage textLayerProps = 5 [(nanopb).type = FT_POINTER];
+   AnimationPropsMessage animationProps = 6 [(nanopb).type = FT_POINTER];
+   LayerPropsMessage layerProps = 7 [(nanopb).type = FT_POINTER];
+   CircleLayerPropsMessage circleLayerProps = 8 [(nanopb).type = FT_POINTER];
 }
 
 message BatchOperationsMessage {
