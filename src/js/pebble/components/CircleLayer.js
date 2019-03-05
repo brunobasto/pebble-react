@@ -16,8 +16,8 @@ class CircleLayer extends Layer {
                     ...super.getPropsMessage(
                         {
                             ...props,
-                            height: radius * 2 + 1,
-                            width: radius * 2 + 1,
+                            height: radius * 2,
+                            width: radius * 2,
                         }
                     ),
                     ...diff,
