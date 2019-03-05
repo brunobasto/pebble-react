@@ -3,6 +3,7 @@ import {
     Animation,
     CircleLayer,
     ImageLayer,
+    Layer,
     TextLayer,
     Window
 } from '../components';
@@ -21,6 +22,7 @@ function createElement(type, props) {
         'text': () => new TextLayer(props, NodeTypes.textLayer),
         'image': () => new ImageLayer(props, NodeTypes.imageLayer),
         'animation': () => new Animation(props, NodeTypes.animation),
+        'layer': () => new Layer(props, NodeTypes.layer),
         ROOT: () => new Root({}, NodeTypes.rootLayer),
         default: undefined
     }

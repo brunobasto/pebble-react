@@ -25,6 +25,12 @@ class App extends Component {
 
         return (
             <Fragment>
+                <layer
+                    height={100}
+                    left={10}
+                    top={10}
+                    width={200}
+                />
                 <animation
                     animationProps={{
                         radius: {

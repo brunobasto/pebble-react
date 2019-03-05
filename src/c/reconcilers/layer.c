@@ -107,7 +107,7 @@ static void appendChild(
   layer_mark_dirty(layer);
 }
 
-static void removeChild(const char *nodeId, bool removeFromRegistry)
+static void removeChild(const char *nodeId)
 {
   Layer *layer = layer_registry_get(nodeId);
 
@@ -126,7 +126,6 @@ void layer_reconciler_init()
 
 void layer_reconciler_deinit()
 {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Deinit layer");
   animation_registry_remove_callback(NODE_TYPE_LAYER);
 }
 
@@ -156,7 +155,7 @@ void layer_reconciler(
     commitUpdate(nodeId, props);
     break;
   case OPERATION_REMOVE_CHILD:
-    removeChild(nodeId, true);
+    removeChild(nodeId);
     break;
   case OPERATION_CLEAR_PROPS:
     clearProps(props);

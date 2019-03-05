@@ -1,8 +1,7 @@
 import { enqueueMessage } from '../utils/messaging'
-import { Operations } from '../utils/constants';
+import { NodeTypes, Operations } from '../utils/constants';
 import protobuf from 'protobufjs';
 import protoJSON from './../../proto.json'
-import Root from './Root';
 
 const { OperationMessage } = protobuf.Root.fromJSON(protoJSON);
 
@@ -12,7 +11,7 @@ class PebbleComponent {
     constructor(props, nodeType) {
         this.props = {...props};
 
-        if (this instanceof Root) {
+        if (nodeType === NodeTypes.rootLayer) {
             this.uniqueId = `ROOT`;
         }
         else {

@@ -3,6 +3,7 @@
 #include "../reconcilers/animation.h"
 #include "../reconcilers/text_layer.h"
 #include "../reconcilers/circle_layer.h"
+#include "../reconcilers/layer.h"
 
 OperationMessage *operation_copy(OperationMessage *copy, OperationMessage operation)
 {
@@ -52,6 +53,18 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
 
   switch (nodeType)
   {
+  case NODE_TYPE_LAYER:
+  {
+    layer_reconciler(windowLayer, operationMessage);
+
+    // Makes sure we clear after ourselves
+    if (operation != OPERATION_CLEAR_PROPS)
+    {
+      operationMessage->operation = OPERATION_CLEAR_PROPS;
+      layer_reconciler(NULL, operationMessage);
+    }
+  }
+  break;
   case NODE_TYPE_TEXT_LAYER:
   {
     text_layer_reconciler(windowLayer, operationMessage);
@@ -94,7 +107,7 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
   free(operationMessage->nodeId);
   free(operationMessage->parentNodeId);
 
-  // // Reconcilers
+  // Reconcilers
   // image_layer_reconciler(windowLayer, operation, nodeType, nodeId, propsDict);
 }
 

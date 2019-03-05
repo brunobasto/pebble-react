@@ -1,15 +1,17 @@
-import Root from './Root';
-import Window from './Window';
-import TextLayer from './TextLayer';
-import ImageLayer from './ImageLayer';
 import Animation from './Animation';
 import CircleLayer from './CircleLayer';
+import ImageLayer from './ImageLayer';
+import Layer from './Layer';
+import Root from './Root';
+import TextLayer from './TextLayer';
+import Window from './Window';
 
 export {
-    Root,
     Animation,
     CircleLayer,
-    TextLayer,
     ImageLayer,
+    Layer,
+    Root,
+    TextLayer,
     Window
 };
