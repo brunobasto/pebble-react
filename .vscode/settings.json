@@ -17,6 +17,25 @@
         "vector": "c",
         "__functional_base_03": "c",
         "__tuple": "c",
-        "utility": "c"
-    }
+        "utility": "c",
+        "jsonparser.h": "c",
+        "layer_reconciler_utils.h": "c",
+        "dictionary.h": "c",
+        "pebble.h": "c",
+        "ios": "c",
+        "typeinfo": "c",
+        "__locale": "c",
+        "layers_registry.h": "c",
+        "layer_props_utils.h": "c",
+        "bitset": "c",
+        "chrono": "c",
+        "ratio": "c",
+        "system_error": "c",
+        "locale": "c",
+        "animation_registry.h": "c",
+        "constants.h": "c",
+        "operations.h": "c"
+    },
+    "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools",
+    "C_Cpp.configurationWarnings": "Disabled"
 }
