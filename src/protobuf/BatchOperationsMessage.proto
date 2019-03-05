@@ -24,6 +24,14 @@ message TextLayerPropsMessage {
    bool layerPropsChanged = 6;
 }
 
+message CircleLayerPropsMessage {
+   uint32 radius = 1 [(nanopb).int_size = IS_8];
+   LayerPropsMessage layerProps = 2 [(nanopb).type = FT_POINTER];
+   // Flags for diffing what changed
+   bool radiusChanged = 3;
+   bool layerPropsChanged = 4;
+}
+
 message AnimationPropsMessage {
    bool loop = 1;
    bool sequence = 2;
@@ -52,6 +60,7 @@ message OperationMessage {
    TextLayerPropsMessage textLayerProps = 4 [(nanopb).type = FT_POINTER];
    AnimationPropsMessage animationProps = 5 [(nanopb).type = FT_POINTER];
    LayerPropsMessage layerProps = 6 [(nanopb).type = FT_POINTER];
+   CircleLayerPropsMessage circleLayerProps = 7 [(nanopb).type = FT_POINTER];
 }
 
 message BatchOperationsMessage {

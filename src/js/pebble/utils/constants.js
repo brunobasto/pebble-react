@@ -9,5 +9,7 @@ export const NodeTypes = {
     rootLayer: 2,
     windowLayer: 3,
     imageLayer: 4,
-    animation: 5
+    animation: 5,
+    layer: 6,
+    circleLayer: 7
 }

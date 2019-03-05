@@ -2,6 +2,7 @@
 #include "../reconcilers/constants.h"
 #include "../reconcilers/animation.h"
 #include "../reconcilers/text_layer.h"
+#include "../reconcilers/circle_layer.h"
 
 OperationMessage *operation_copy(OperationMessage *copy, OperationMessage operation)
 {
@@ -22,6 +23,14 @@ OperationMessage *operation_copy(OperationMessage *copy, OperationMessage operat
     text_layer_reconciler_merge_props(copy->textLayerProps, operation.textLayerProps, true);
   }
   break;
+  case NODE_TYPE_CIRCLE_LAYER:
+  {
+    copy->circleLayerProps = malloc(sizeof(CircleLayerPropsMessage));
+    copy->circleLayerProps->layerProps = NULL;
+
+    circle_layer_reconciler_merge_props(copy->circleLayerProps, operation.circleLayerProps, true);
+  }
+  break;
   default:
     break;
   }
@@ -36,7 +45,6 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
 {
   const uint8_t operation = operationMessage->operation;
   const uint8_t nodeType = operationMessage->nodeType;
-  const char *nodeId = operationMessage->nodeId;
 
   Layer *windowLayer = window_get_root_layer(mainWindow);
 
@@ -44,8 +52,6 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
   {
   case NODE_TYPE_TEXT_LAYER:
   {
-    TextLayerPropsMessage *props = operationMessage->textLayerProps;
-
     text_layer_reconciler(windowLayer, operationMessage);
 
     // Makes sure we clear after ourselves
@@ -56,10 +62,20 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
     }
   }
   break;
+  case NODE_TYPE_CIRCLE_LAYER:
+  {
+    circle_layer_reconciler(windowLayer, operationMessage);
+
+    // Makes sure we clear after ourselves
+    if (operation != OPERATION_CLEAR_PROPS)
+    {
+      operationMessage->operation = OPERATION_CLEAR_PROPS;
+      circle_layer_reconciler(NULL, operationMessage);
+    }
+  }
+  break;
   case NODE_TYPE_ANIMATION:
   {
-    AnimationPropsMessage *props = operationMessage->animationProps;
-
     animation_reconciler(windowLayer, operationMessage);
 
     // Makes sure we clear after ourselves

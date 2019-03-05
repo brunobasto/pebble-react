@@ -1,5 +1,5 @@
 
-ò
+Ø
 BatchOperationsMessage.protonanopb.proto"è
 LayerPropsMessage
 height (Bí?8Rheight
@@ -20,7 +20,14 @@ layerProps (2.LayerPropsMessageBí?R
 layerProps*
 alignmentChanged (RalignmentChanged 
 textChanged (RtextChanged,
-layerPropsChanged (RlayerPropsChanged"•
+layerPropsChanged (RlayerPropsChanged"«
+CircleLayerPropsMessage
+radius (Bí?8Rradius9
+
+layerProps (2.LayerPropsMessageBí?R
+layerProps$
+radiusChanged (RradiusChanged,
+layerPropsChanged (RlayerPropsChanged"•
 AnimationPropsMessage
 loop (Rloop
 sequence (Rsequence>
@@ -32,7 +39,7 @@ layerProps*
 delayChanged (RdelayChanged 
 loopChanged	 (RloopChanged(
 sequenceChanged
- (RsequenceChanged"¬
+ (RsequenceChanged"è
 OperationMessage#
 	operation (Bí?8R	operation!
 nodeType (Bí?8RnodeType
@@ -41,7 +48,8 @@ layerProps*
 animationProps (2.AnimationPropsMessageBí?RanimationProps9
 
 layerProps (2.LayerPropsMessageBí?R
-layerProps"R
+layerPropsK
+circleLayerProps (2.CircleLayerPropsMessageBí?RcircleLayerProps"R
 BatchOperationsMessage8
 
 operations (2.OperationMessageBí?R

@@ -3,6 +3,54 @@
     "java_package": "fi.kapsi.koti.jpa.nanopb"
   },
   "nested": {
+    "LayerPropsMessage": {
+      "fields": {
+        "height": {
+          "type": "uint32",
+          "id": 1,
+          "options": {
+            "(nanopb).int_size": "IS_8"
+          }
+        },
+        "left": {
+          "type": "int32",
+          "id": 2,
+          "options": {
+            "(nanopb).int_size": "IS_16"
+          }
+        },
+        "top": {
+          "type": "int32",
+          "id": 3,
+          "options": {
+            "(nanopb).int_size": "IS_16"
+          }
+        },
+        "width": {
+          "type": "uint32",
+          "id": 4,
+          "options": {
+            "(nanopb).int_size": "IS_8"
+          }
+        },
+        "heightChanged": {
+          "type": "bool",
+          "id": 5
+        },
+        "leftChanged": {
+          "type": "bool",
+          "id": 6
+        },
+        "topChanged": {
+          "type": "bool",
+          "id": 7
+        },
+        "widthChanged": {
+          "type": "bool",
+          "id": 8
+        }
+      }
+    },
     "TextLayerPropsMessage": {
       "fields": {
         "alignment": {
@@ -12,64 +60,57 @@
             "(nanopb).type": "FT_POINTER"
           }
         },
-        "height": {
-          "type": "uint32",
-          "id": 2,
-          "options": {
-            "(nanopb).int_size": "IS_8"
-          }
-        },
-        "left": {
-          "type": "int32",
-          "id": 3,
-          "options": {
-            "(nanopb).int_size": "IS_16"
-          }
-        },
         "text": {
           "type": "string",
-          "id": 4,
+          "id": 2,
           "options": {
             "(nanopb).type": "FT_POINTER"
           }
         },
-        "top": {
-          "type": "int32",
-          "id": 5,
+        "layerProps": {
+          "type": "LayerPropsMessage",
+          "id": 3,
           "options": {
-            "(nanopb).int_size": "IS_16"
-          }
-        },
-        "width": {
-          "type": "uint32",
-          "id": 6,
-          "options": {
-            "(nanopb).int_size": "IS_8"
+            "(nanopb).type": "FT_POINTER"
           }
         },
         "alignmentChanged": {
           "type": "bool",
-          "id": 7
-        },
-        "heightChanged": {
-          "type": "bool",
-          "id": 8
-        },
-        "leftChanged": {
-          "type": "bool",
-          "id": 9
+          "id": 4
         },
         "textChanged": {
           "type": "bool",
-          "id": 10
+          "id": 5
         },
-        "topChanged": {
+        "layerPropsChanged": {
           "type": "bool",
-          "id": 11
+          "id": 6
+        }
+      }
+    },
+    "CircleLayerPropsMessage": {
+      "fields": {
+        "radius": {
+          "type": "uint32",
+          "id": 1,
+          "options": {
+            "(nanopb).int_size": "IS_8"
+          }
         },
-        "widthChanged": {
+        "layerProps": {
+          "type": "LayerPropsMessage",
+          "id": 2,
+          "options": {
+            "(nanopb).type": "FT_POINTER"
+          }
+        },
+        "radiusChanged": {
           "type": "bool",
-          "id": 12
+          "id": 3
+        },
+        "layerPropsChanged": {
+          "type": "bool",
+          "id": 4
         }
       }
     },
@@ -164,6 +205,20 @@
         "animationProps": {
           "type": "AnimationPropsMessage",
           "id": 5,
+          "options": {
+            "(nanopb).type": "FT_POINTER"
+          }
+        },
+        "layerProps": {
+          "type": "LayerPropsMessage",
+          "id": 6,
+          "options": {
+            "(nanopb).type": "FT_POINTER"
+          }
+        },
+        "circleLayerProps": {
+          "type": "CircleLayerPropsMessage",
+          "id": 7,
           "options": {
             "(nanopb).type": "FT_POINTER"
           }

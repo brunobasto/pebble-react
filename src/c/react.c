@@ -24,6 +24,7 @@
 #include "./reconcilers/animation.h"
 #include "./reconcilers/image_layer.h"
 #include "./reconcilers/text_layer.h"
+#include "./reconcilers/circle_layer.h"
 
 AppTimer *timer;
 
@@ -149,6 +150,7 @@ static void appInit(void)
   text_layer_reconciler_init();
   // image_layer_reconciler_init();
   animation_reconciler_init();
+  circle_layer_reconciler_init();
 
   configureAppMessage();
 
@@ -160,6 +162,7 @@ static void appDeinit(void)
   text_layer_reconciler_deinit();
   // image_layer_reconciler_deinit();
   animation_reconciler_deinit();
+  circle_layer_reconciler_deinit();
   layer_reconciler_deinit();
 
   animation_registry_deinit();
