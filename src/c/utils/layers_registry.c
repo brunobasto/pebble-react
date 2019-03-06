@@ -31,6 +31,11 @@ int layer_registry_has(const char *nodeId)
     return dict_has(layersRegistryDictionary, nodeId);
 }
 
+void layer_registry_foreach(void *callback)
+{
+    dict_foreach(layersRegistryDictionary, callback);
+}
+
 void *layer_registry_get_reconciler(Layer *layer)
 {
     return hash_get(layersReconcilersRegistryHashMap, layer);

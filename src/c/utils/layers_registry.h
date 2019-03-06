@@ -7,6 +7,7 @@ void layer_registry_add(const char *nodeId, Layer *layer);
 void layer_registry_deinit();
 void layer_registry_init();
 void layer_registry_remove(const char *nodeId);
+void layer_registry_foreach(void *callback);
 
 void *layer_registry_get_reconciler(Layer *layer);
 void layer_registry_add_reconciler(Layer *layer, void *reconciler);

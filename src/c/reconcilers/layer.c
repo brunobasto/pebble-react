@@ -44,16 +44,20 @@ static void commitUpdate(
 
   GRect frame = layer_get_frame(layer);
 
-  if (newProps->topChanged) {
+  if (newProps->topChanged)
+  {
     frame.origin.y = newProps->top;
   }
-  if (newProps->leftChanged) {
+  if (newProps->leftChanged)
+  {
     frame.origin.x = newProps->left;
   }
-  if (newProps->heightChanged) {
+  if (newProps->heightChanged)
+  {
     frame.size.h = newProps->height;
   }
-  if (newProps->widthChanged) {
+  if (newProps->widthChanged)
+  {
     frame.size.w = newProps->width;
   }
 
@@ -107,14 +111,24 @@ static void appendChild(
   layer_mark_dirty(layer);
 }
 
-static void removeChild(const char *nodeId)
+static void removeChild(const char *nodeId, bool removeFromRegistry)
 {
   Layer *layer = layer_registry_get(nodeId);
 
   layer_remove_child_layers(layer);
   layer_remove_from_parent(layer);
-  layer_registry_remove(nodeId);
+
+  if (removeFromRegistry)
+  {
+    layer_registry_remove(nodeId);
+  }
+
   layer_destroy(layer);
+}
+
+static void freeRegistryEntry(char *key, void *value)
+{
+  removeChild(key, false);
 }
 
 // Public
@@ -126,10 +140,13 @@ void layer_reconciler_init()
 
 void layer_reconciler_deinit()
 {
+  layer_registry_foreach(freeRegistryEntry);
+
   animation_registry_remove_callback(NODE_TYPE_LAYER);
 }
 
-static void clearProps(LayerPropsMessage *props) {
+static void clearProps(LayerPropsMessage *props)
+{
   free(props);
 }
 
@@ -155,7 +172,7 @@ void layer_reconciler(
     commitUpdate(nodeId, props);
     break;
   case OPERATION_REMOVE_CHILD:
-    removeChild(nodeId);
+    removeChild(nodeId, true);
     break;
   case OPERATION_CLEAR_PROPS:
     clearProps(props);
