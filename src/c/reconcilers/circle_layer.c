@@ -27,8 +27,6 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
     return;
   }
 
-  GRect frame = layer_get_frame(layer);
-
   GPoint center = GPoint(
       props->radius,
       props->radius);

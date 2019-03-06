@@ -1,7 +1,6 @@
 #include <pebble.h>
 
 #include "../lib/dictionary/dictionary.h"
-#include "../lib/json/jsonparser.h"
 
 void assert_dict_add_remove();
 void assert_dict_new_free();

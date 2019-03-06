@@ -1,5 +1,4 @@
 #include "image_layer.h"
-#include "../utils/layer_props_utils.h"
 #include "../utils/layers_registry.h"
 
 static PebbleDictionary *imageLayersDict;
@@ -10,8 +9,6 @@ static void setImageLayerProperties(Layer *imageLayer, PebbleDictionary *propsDi
   {
     return;
   }
-
-  layer_props_utils_set_frame_from_props(imageLayer, propsDict);
 }
 
 static void appendChild(

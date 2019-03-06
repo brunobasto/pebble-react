@@ -1,7 +1,6 @@
 #include "memory.h"
 
 #include "../utils/string.h"
-#include "../utils/json_utils.h"
 #include "../utils/operations.h"
 #include "../utils/layers_registry.h"
 #include "../utils/animation_registry.h"
@@ -94,36 +93,6 @@ void assert_substr()
     free(sub);
     logResult("assert_substr", usedBefore, heap_bytes_used());
     free(s);
-}
-
-/*
- * JSON memory leak tests
- */
-
-void assert_json_object_parse()
-{
-    PebbleDictionary *jsonProps = dict_new();
-    int usedBefore = heap_bytes_used();
-    json_utils_parse_object_to_dict("{\"a\": \"avalue\", \"b\": \"bvalue\", \"c\": \"cvalue\"}", jsonProps);
-    free(dict_get(jsonProps, "a"));
-    dict_remove(jsonProps, "a");
-    free(dict_get(jsonProps, "b"));
-    dict_remove(jsonProps, "b");
-    free(dict_get(jsonProps, "c"));
-    dict_remove(jsonProps, "c");
-    logResult("assert_json_object_parse", usedBefore, heap_bytes_used());
-    dict_free(jsonProps);
-}
-
-void assert_json_array_parse()
-{
-    char **array = calloc(2, sizeof(char *));
-    int usedBefore = heap_bytes_used();
-    json_utils_parse_array_to_array("[{\"a\": \"avalue\", \"b\": \"bvalue\", \"c\": \"cvalue\"}, \"other\"]", array);
-    free(array[0]);
-    free(array[1]);
-    logResult("assert_json_array_parse", usedBefore, heap_bytes_used());
-    free(array);
 }
 
 /*

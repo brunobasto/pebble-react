@@ -1,8 +1,6 @@
 #include "animation.h"
 
 #include "../lib/hashmap/hashmap.h"
-#include "../utils/json_utils.h"
-#include "../utils/layer_props_utils.h"
 #include "../utils/layers_registry.h"
 #include "../utils/animation_registry.h"
 #include "../utils/string.h"
