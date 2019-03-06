@@ -3,7 +3,6 @@
 #include "../lib/hashmap/hashmap.h"
 #include "../utils/layers_registry.h"
 #include "../utils/animation_registry.h"
-#include "../utils/string.h"
 #include "../utils/operations.h"
 
 static PebbleDictionary *animationsRegistry;

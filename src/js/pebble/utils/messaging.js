@@ -39,32 +39,43 @@ const getParentMessage = (message, queue) => {
     return queue.find(m => m.nodeId === message.parentNodeId);
 }
 
-const reorderMessageQueue = (queue) => {
-    const added = {};
-    const newQueue = [];
-
-    for (const index in queue) {
-        const message = queue[index];
+const reorderMessageQueue = (queue, orderedQueue = [], added = {}) => {
+    while (queue.length) {
+        const message = queue.shift();
 
         if (message.operation === Operations.appendChild) {
-            const parentMessage = getParentMessage(message, queue);
+            const parentMessages = [];
+            let parentMessage = message;
 
-            if (parentMessage && !added[parentMessage.nodeId]) {
-                newQueue.push(parentMessage);
-                added[parentMessage.nodeId] = true;
+            do {
+                parentMessage = getParentMessage(parentMessage, queue);
+
+                if (parentMessage) {
+                    parentMessages.push(parentMessage);
+                }
+            }
+            while (parentMessage);
+
+            while (parentMessages.length) {
+                const parent = parentMessages.pop();
+
+                if (!added[parent.nodeId]) {
+                    orderedQueue.push(parent);
+                    added[parent.nodeId] = true;
+                }
             }
 
             if (!added[message.nodeId]) {
-                newQueue.push(message);
+                orderedQueue.push(message);
                 added[message.nodeId] = true;
             }
         }
         else {
-            newQueue.push(message);
+            orderedQueue.push(message);
         }
     }
 
-    return newQueue;
+    return orderedQueue;
 }
 
 export const enqueueMessage = (message) => {

@@ -31,7 +31,7 @@ class PebbleComponent {
                         operation: Operations.appendChild,
                         nodeType: child.nodeType,
                         nodeId: child.uniqueId,
-                        parentNodeId: this.uniqueId
+                        parentNodeId: this.getLayerId()
                     }
                 )
             );
@@ -49,7 +49,7 @@ class PebbleComponent {
                     operation: Operations.removeChild,
                     nodeType: child.nodeType,
                     nodeId: child.uniqueId,
-                    parentNodeId: this.uniqueId
+                    parentNodeId: this.getLayerId()
                 }
             );
 
@@ -113,6 +113,10 @@ class PebbleComponent {
                 }
             )
         );
+    }
+
+    getLayerId() {
+        return this.uniqueId;
     }
 
     getPropsDiff(props) {

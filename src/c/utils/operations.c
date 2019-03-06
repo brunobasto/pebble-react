@@ -1,4 +1,6 @@
 #include "operations.h"
+#include "layers_registry.h"
+
 #include "../reconcilers/constants.h"
 #include "../reconcilers/animation.h"
 #include "../reconcilers/text_layer.h"
@@ -16,6 +18,13 @@ OperationMessage *operation_copy(OperationMessage *copy, OperationMessage operat
 
   switch (operation.nodeType)
   {
+  case NODE_TYPE_LAYER:
+  {
+    copy->layerProps = malloc(sizeof(LayerPropsMessage));
+
+    layer_reconciler_merge_props(copy->layerProps, operation.layerProps, true);
+  }
+  break;
   case NODE_TYPE_TEXT_LAYER:
   {
     copy->textLayerProps = malloc(sizeof(TextLayerPropsMessage));
@@ -48,14 +57,23 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
 {
   const uint8_t operation = operationMessage->operation;
   const uint8_t nodeType = operationMessage->nodeType;
+  const char *parentNodeId = operationMessage->parentNodeId;
 
-  Layer *windowLayer = window_get_root_layer(mainWindow);
+  Layer *parentLayer = window_get_root_layer(mainWindow);
+
+  if (
+    strcmp(parentNodeId, "ROOT") != 0 &&
+    layer_registry_has(parentNodeId)
+  )
+  {
+    parentLayer = layer_registry_get(parentNodeId);
+  }
 
   switch (nodeType)
   {
   case NODE_TYPE_LAYER:
   {
-    layer_reconciler(windowLayer, operationMessage);
+    layer_reconciler(parentLayer, operationMessage);
 
     // Makes sure we clear after ourselves
     if (operation != OPERATION_CLEAR_PROPS)
@@ -67,7 +85,7 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
   break;
   case NODE_TYPE_TEXT_LAYER:
   {
-    text_layer_reconciler(windowLayer, operationMessage);
+    text_layer_reconciler(parentLayer, operationMessage);
 
     // Makes sure we clear after ourselves
     if (operation != OPERATION_CLEAR_PROPS)
@@ -79,7 +97,7 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
   break;
   case NODE_TYPE_CIRCLE_LAYER:
   {
-    circle_layer_reconciler(windowLayer, operationMessage);
+    circle_layer_reconciler(parentLayer, operationMessage);
 
     // Makes sure we clear after ourselves
     if (operation != OPERATION_CLEAR_PROPS)
@@ -91,7 +109,7 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
   break;
   case NODE_TYPE_ANIMATION:
   {
-    animation_reconciler(windowLayer, operationMessage);
+    animation_reconciler(parentLayer, operationMessage);
 
     // Makes sure we clear after ourselves
     if (operation != OPERATION_CLEAR_PROPS)
@@ -108,7 +126,7 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
   free(operationMessage->parentNodeId);
 
   // Reconcilers
-  // image_layer_reconciler(windowLayer, operation, nodeType, nodeId, propsDict);
+  // image_layer_reconciler(parentLayer, operation, nodeType, nodeId, propsDict);
 }
 
 void operations_process_batch(Window *mainWindow, BatchOperationsMessage *batchOperations)

@@ -21,16 +21,29 @@ class App extends Component {
     }
 
     render() {
-        const {what} = this.state;
+        const { what } = this.state;
 
         return (
             <Fragment>
-                <layer
-                    height={100}
-                    left={10}
-                    top={10}
-                    width={200}
-                />
+                <animation
+                    animationProps={{
+                        top: {
+                            start: -30,
+                            end: 10
+                        }
+                    }}
+                    duration={750}
+                >
+                    <layer
+                        height={10}
+                        left={10}
+                        top={15}
+                        width={10}
+                    >
+                        <circle radius={5} top={5} left={5} />
+                    </layer>
+                </animation>
+
                 <animation
                     animationProps={{
                         radius: {
