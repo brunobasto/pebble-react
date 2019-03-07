@@ -27,51 +27,33 @@ class App extends Component {
             <Fragment>
                 <animation
                     animationProps={{
+                        left: {
+                            start: -30,
+                            end: 0
+                        },
                         top: {
                             start: -30,
-                            end: 10
+                            end: 0
                         }
                     }}
                     duration={750}
                 >
                     <layer
-                        height={10}
-                        left={10}
-                        top={15}
-                        width={10}
-                    >
-                        <circle radius={5} top={5} left={5} />
-                    </layer>
-                </animation>
-
-                <animation
-                    animationProps={{
-                        radius: {
-                            start: 0,
-                            end: 50
-                        }
-                    }}
-                    duration={750}
-                >
-                    <circle radius={0} top={84} left={72} />
-                </animation>
-
-                <animation
-                    animationProps={{
-                        top: {
-                            start: -30,
-                            end: 10
-                        }
-                    }}
-                    duration={750}
-                >
-                    <text
                         height={30}
                         top={-30}
                         width={144}
                     >
-                        {what}
-                    </text>
+                        <circle radius={5} top={10} left={5} />
+
+                        <text
+                            alignment={'left'}
+                            height={30}
+                            left={20}
+                            width={10 * what.length}
+                        >
+                            {what}
+                        </text>
+                    </layer>
                 </animation>
 
                 {'Rocks'.split('').map((letter, index) => (
