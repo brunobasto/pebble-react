@@ -44,9 +44,10 @@ class Animation extends PebbleComponent {
                     delayChanged: props.hasOwnProperty('delay'),
                     durationChanged: props.hasOwnProperty('duration'),
                     loopChanged: props.hasOwnProperty('loop'),
-                    sequenceChanged: props.hasOwnProperty('sequence'),
+                    sequenceChanged: props.hasOwnProperty('sequence')
                 }
-            )
+            ),
+            virtualLayer: true
         };
     }
 

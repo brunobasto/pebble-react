@@ -51,6 +51,13 @@ const reorderMessageQueue = (queue, orderedQueue = [], added = {}) => {
                 parentMessage = getParentMessage(parentMessage, queue);
 
                 if (parentMessage) {
+                    if (
+                        parentMessage.nodeId === message.parentNodeId &&
+                        parentMessage.virtualLayer
+                    ) {
+                        message.parentNodeId = parentMessage.parentNodeId;
+                    }
+
                     parentMessages.push(parentMessage);
                 }
             }
