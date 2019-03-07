@@ -1,18 +1,3 @@
-- Change operations message to a dynamic array
-    DONE
-- Change string props to be dynamic length strings for better memory usage
-    DONE
-- Convert refactor Animation to use protobuf
-    Thinking in heaving each animation be an OperationMessage
-    each reconciler would need to implement a animation callback that takes
-    the percentage and what props should be affected. Something like
-
-    callback = reconcilers_registry_get_animation_callback(nodeType);
-
-    callback(nodeId, propsNames, percent);
-
-    DONE
-
 - Click should send a protobuf operation
 
 - Text
@@ -21,13 +6,16 @@
 
 - Image Layer
     TODO
-- Frame Layer
-    Parcially DONE - Still missing javascript part and also to figure out
-    how to do parent/child relationship between layers
+
 - Rectangle Layer
     TODO
+
 - Line Layer
     TODO
+
 - Circle Layer
     Parcially DONE - Still need to do the same calculations IU'm doing
     for animation update on appendChild and commitUpdate
+
+- "prepareUpdate" lifecyle should support array values
+
