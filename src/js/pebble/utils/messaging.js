@@ -1,7 +1,7 @@
 import protobuf from 'protobufjs';
 import protoJSON from './../../proto.json'
 import { Operations } from './constants.js';
-const { BatchOperationsMessage, OperationMessage } = protobuf.Root.fromJSON(protoJSON);
+const { BatchOperationsMessage } = protobuf.Root.fromJSON(protoJSON);
 
 const insistence = 5.
 const queue = [];
@@ -90,11 +90,17 @@ export const flushMessages = async () => {
     if (queue.length > 0) {
         busy = true;
 
-        // console.log('Queue length', queue, queue.length);
+        let batchOperationMessage = BatchOperationsMessage.create(
+            {
+                operations: reorderMessageQueue(queue)
+            }
+        );
 
-        let batchOperationMessage = BatchOperationsMessage.create({ operations: reorderMessageQueue(queue) });
+        let buffer = BatchOperationsMessage
+            .encode(batchOperationMessage)
+            .finish();
 
-        let buffer = BatchOperationsMessage.encode(batchOperationMessage).finish();
+        // For debugging
         let decoded = BatchOperationsMessage.decode(buffer);
         console.log(decoded);
 
