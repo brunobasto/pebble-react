@@ -34,7 +34,8 @@
         "locale": "c",
         "animation_registry.h": "c",
         "constants.h": "c",
-        "operations.h": "c"
+        "operations.h": "c",
+        "circle_layer.h": "c"
     },
     "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools",
     "C_Cpp.configurationWarnings": "Disabled"
