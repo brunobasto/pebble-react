@@ -45,6 +45,11 @@ static void setAnimationProperties(Animation *animation, AnimationPropsMessage *
   // Duration
   animation_set_duration(animation, props->duration);
 
+  if (props->delayChanged)
+  {
+    animation_set_delay(animation, props->delay);
+  }
+
   // Curve
   animation_set_curve(animation, AnimationCurveEaseInOut);
 
@@ -223,7 +228,8 @@ void animation_reconciler_deinit()
   hash_free(operationsHashMap);
 }
 
-static void clearProps(AnimationPropsMessage *props) {
+static void clearProps(AnimationPropsMessage *props)
+{
   free(props);
 }
 
