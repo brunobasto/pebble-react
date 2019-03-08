@@ -1,5 +1,5 @@
 
-⁄
+î
 BatchOperationsMessage.protonanopb.proto"è
 LayerPropsMessage
 height (Bí?8Rheight
@@ -11,16 +11,18 @@
 
 topChanged (R
 topChanged"
-widthChanged (RwidthChanged"é
+widthChanged (RwidthChanged"»
 TextLayerPropsMessage#
-	alignment (	Bí?R	alignment
-text (	Bí?Rtext9
+	alignment (	Bí?R	alignment
+color (Rcolor
+text (	Bí?Rtext9
 
-layerProps (2.LayerPropsMessageBí?R
+layerProps (2.LayerPropsMessageBí?R
 layerProps*
-alignmentChanged (RalignmentChanged 
-textChanged (RtextChanged,
-layerPropsChanged (RlayerPropsChanged"«
+alignmentChanged (RalignmentChanged"
+colorChanged (RcolorChanged 
+textChanged (RtextChanged,
+layerPropsChanged (RlayerPropsChanged"«
 CircleLayerPropsMessage
 radius (Bí?8Rradius9
 

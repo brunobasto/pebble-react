@@ -16,12 +16,14 @@ message LayerPropsMessage {
 
 message TextLayerPropsMessage {
    string alignment = 1 [(nanopb).type = FT_POINTER];
-   string text = 2 [(nanopb).type = FT_POINTER];
-   LayerPropsMessage layerProps = 3 [(nanopb).type = FT_POINTER];
+   uint32 color = 2;
+   string text = 3 [(nanopb).type = FT_POINTER];
+   LayerPropsMessage layerProps = 4 [(nanopb).type = FT_POINTER];
    // Flags for diffing what changed
-   bool alignmentChanged = 4;
-   bool textChanged = 5;
-   bool layerPropsChanged = 6;
+   bool alignmentChanged = 5;
+   bool colorChanged = 6;
+   bool textChanged = 7;
+   bool layerPropsChanged = 8;
 }
 
 message CircleLayerPropsMessage {

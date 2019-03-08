@@ -56,20 +56,36 @@ class App extends Component {
                             <circle top={13} left={15} />
                         </animation>
 
-                        <text
-                            alignment={'left'}
-                            height={30}
-                            left={30}
-                            width={10 * what.length}
+                        <animation
+                            animationProps={{
+                                color: {
+                                    start: "#5F98E1",
+                                    end: "#073CAA"
+                                }
+                            }}
+                            delay={750}
+                            duration={500}
                         >
-                            {what}
-                        </text>
+                            <text
+                                alignment={'left'}
+                                color={"#5F98E1"}
+                                height={30}
+                                left={30}
+                                width={10 * what.length}
+                            >
+                                {what}
+                            </text>
+                        </animation>
                     </layer>
                 </animation>
 
                 {'Rocks'.split('').map((letter, index) => (
                     <animation
                         animationProps={{
+                            color: {
+                                start: "#5F98E1",
+                                end: "#CCCB40"
+                            },
                             left: {
                                 start: index % 2 == 0 ? letterWidth * -1 : 200,
                                 end: (index * letterWidth)
@@ -78,6 +94,7 @@ class App extends Component {
                         duration={2000}
                     >
                         <text
+                            color="#5F98E1"
                             height={30}
                             left={index % 2 == 0 ? letterWidth * -1 : 200}
                             top={65}

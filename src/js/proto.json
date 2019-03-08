@@ -60,31 +60,39 @@
             "(nanopb).type": "FT_POINTER"
           }
         },
+        "color": {
+          "type": "uint32",
+          "id": 2
+        },
         "text": {
           "type": "string",
-          "id": 2,
+          "id": 3,
           "options": {
             "(nanopb).type": "FT_POINTER"
           }
         },
         "layerProps": {
           "type": "LayerPropsMessage",
-          "id": 3,
+          "id": 4,
           "options": {
             "(nanopb).type": "FT_POINTER"
           }
         },
         "alignmentChanged": {
           "type": "bool",
-          "id": 4
+          "id": 5
+        },
+        "colorChanged": {
+          "type": "bool",
+          "id": 6
         },
         "textChanged": {
           "type": "bool",
-          "id": 5
+          "id": 7
         },
         "layerPropsChanged": {
           "type": "bool",
-          "id": 6
+          "id": 8
         }
       }
     },

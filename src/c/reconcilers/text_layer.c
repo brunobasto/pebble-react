@@ -41,7 +41,14 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
     return;
   }
 
-  graphics_context_set_text_color(ctx, GColorWhite);
+  GColor8 color = GColorWhite;
+
+  if (props->colorChanged)
+  {
+    color = GColorFromHEX(props->color);
+  }
+
+  graphics_context_set_text_color(ctx, color);
   graphics_draw_text(
       ctx,
       props->text,
@@ -98,7 +105,11 @@ void text_layer_reconciler_merge_props(
       strcpy(target->alignment, source->alignment);
     }
   }
-
+  if (source->colorChanged || force)
+  {
+    target->colorChanged = true;
+    target->color = source->color;
+  }
   if (source->layerPropsChanged || force)
   {
     target->layerPropsChanged = true;
@@ -171,6 +182,29 @@ static void handleAnimationUpdate(
   // Temp - in reality we will create a new operation and process results
   resultOperation->textLayerProps = malloc(sizeof(TextLayerPropsMessage));
   resultOperation->textLayerProps->alignmentChanged = 0;
+
+  TextLayerPropsMessage *startProps = startOperation->textLayerProps;
+  TextLayerPropsMessage *endProps = endOperation->textLayerProps;
+
+  if (startOperation->textLayerProps->colorChanged)
+  {
+    resultOperation->textLayerProps->colorChanged = 1;
+
+    uint8_t sr = (startProps->color >> 16 & 0xff);
+    uint8_t sg = (startProps->color >> 8 & 0xff);
+    uint8_t sb = (startProps->color & 0xff);
+
+    uint8_t er = (endProps->color >> 16 & 0xff);
+    uint8_t eg = (endProps->color >> 8 & 0xff);
+    uint8_t eb = (endProps->color & 0xff);
+
+    uint8_t rr = (uint8_t)(sr + (er - sr) * percent / 100);
+    uint8_t rg = (uint8_t)(sg + (eg - sg) * percent / 100);
+    uint8_t rb = (uint8_t)(sb + (eb - sb) * percent / 100);
+
+    resultOperation->textLayerProps->color = rr << 16 | rg << 8 | rb;
+  }
+
   resultOperation->textLayerProps->layerPropsChanged = 1;
   resultOperation->textLayerProps->textChanged = 0;
   resultOperation->textLayerProps->layerProps = layerResultOperation->layerProps;
