@@ -27,12 +27,15 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
     return;
   }
 
-  GPoint center = GPoint(
-      props->radius,
-      props->radius);
+  if (props->radius == 0)
+  {
+    return;
+  }
+
+  GPoint center = GPoint(props->radius, props->radius);
 
   // Draw the outline of a circle
-  graphics_draw_circle(ctx, center, props->radius);
+  // graphics_draw_circle(ctx, center, props->radius);
 
   // Fill a circle
   graphics_fill_circle(ctx, center, props->radius);
@@ -79,6 +82,23 @@ static OperationMessage *createLayerOperation(
   return layerOperation;
 }
 
+static void calculateLayer(
+    LayerPropsMessage *layerProps,
+    CircleLayerPropsMessage *circleLayerProps)
+{
+  if (circleLayerProps->radiusChanged)
+  {
+    layerProps->top = circleLayerProps->layerProps->top - circleLayerProps->radius;
+    layerProps->topChanged = 1;
+    layerProps->left = circleLayerProps->layerProps->left - circleLayerProps->radius;
+    layerProps->leftChanged = 1;
+    layerProps->height = circleLayerProps->radius * 2 + 1;
+    layerProps->heightChanged = 1;
+    layerProps->width = layerProps->height;
+    layerProps->widthChanged = 1;
+  }
+}
+
 static void commitUpdate(
     const char *nodeId,
     CircleLayerPropsMessage *newProps)
@@ -90,9 +110,14 @@ static void commitUpdate(
   circle_layer_reconciler_merge_props(cachedProps, newProps, false);
   // Call layer reconciler to update top, left, width and height
   OperationMessage *layerOperation = createLayerOperation(OPERATION_COMMIT_UPDATE, nodeId);
-  layerOperation->layerProps = cachedProps->layerProps;
+  layerOperation->layerProps = malloc(sizeof(LayerPropsMessage));
+
+  layer_reconciler_merge_props(layerOperation->layerProps, cachedProps->layerProps, true);
+  calculateLayer(layerOperation->layerProps, cachedProps);
+
   layer_reconciler(NULL, layerOperation);
   free(layerOperation->nodeId);
+  free(layerOperation->layerProps);
   free(layerOperation);
 
   layer_mark_dirty(layer);
@@ -113,11 +138,11 @@ static void handleAnimationUpdate(
   layerEndOperation->layerProps = endOperation->circleLayerProps->layerProps;
 
   // Layer result Operation
-  OperationMessage *layerResultOperation = malloc(sizeof(OperationMessage));
+  // OperationMessage *layerResultOperation = malloc(sizeof(OperationMessage));
 
   // Call Layer animation handler
-  callLayerAnimationCallback = animation_registry_get_callback(NODE_TYPE_LAYER);
-  callLayerAnimationCallback(layerStartOperation, layerEndOperation, layerResultOperation, percent);
+  // callLayerAnimationCallback = animation_registry_get_callback(NODE_TYPE_LAYER);
+  // callLayerAnimationCallback(layerStartOperation, layerEndOperation, layerResultOperation, percent);
 
   // Temp - in reality we will create a new operation and process results
   resultOperation->circleLayerProps = malloc(sizeof(CircleLayerPropsMessage));
@@ -129,23 +154,11 @@ static void handleAnimationUpdate(
 
   if (startProps->radiusChanged)
   {
-    Layer *layer = layer_registry_get(layerStartOperation->nodeId);
-
-    CircleLayerPropsMessage *props = (CircleLayerPropsMessage *)hash_get(propsRegistry, layer);
-
     resultOperation->circleLayerProps->radius = (int16_t)(startProps->radius + (endProps->radius - startProps->radius) * percent / 100);
-
-    int8_t radiusDiff = resultOperation->circleLayerProps->radius - props->radius;
-
-    layerResultOperation->layerProps->top = props->layerProps->top - radiusDiff;
-    layerResultOperation->layerProps->topChanged = 1;
-
-    layerResultOperation->layerProps->left = props->layerProps->left - radiusDiff;
-    layerResultOperation->layerProps->leftChanged = 1;
   }
 
-  resultOperation->circleLayerProps->layerPropsChanged = 1;
-  resultOperation->circleLayerProps->layerProps = layerResultOperation->layerProps;
+  resultOperation->circleLayerProps->layerPropsChanged = 0;
+  // resultOperation->circleLayerProps->layerProps = layerResultOperation->layerProps;
 
   // Clear layer start Operation
   free(layerStartOperation->nodeId);
@@ -153,7 +166,7 @@ static void handleAnimationUpdate(
   // Clear layer end Operation
   free(layerEndOperation);
   // Clear layer result Operation
-  free(layerResultOperation);
+  // free(layerResultOperation);
 }
 
 static CircleLayerPropsMessage *setupCachedProps(CircleLayerPropsMessage *props)
@@ -175,10 +188,14 @@ static void appendChild(
 
   // Layer operation
   OperationMessage *layerOperation = createLayerOperation(OPERATION_APPEND_CHILD, nodeId);
-  layerOperation->layerProps = cachedProps->layerProps;
 
+  layerOperation->layerProps = malloc(sizeof(LayerPropsMessage));
+  layer_reconciler_merge_props(layerOperation->layerProps, cachedProps->layerProps, true);
+  calculateLayer(layerOperation->layerProps, cachedProps);
   layer_reconciler(parentLayer, layerOperation);
+
   free(layerOperation->nodeId);
+  free(layerOperation->layerProps);
   free(layerOperation);
 
   Layer *layer = layer_registry_get(nodeId);
