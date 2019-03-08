@@ -43,12 +43,23 @@ class App extends Component {
                         top={-30}
                         width={144}
                     >
-                        <circle radius={5} top={10} left={5} />
+                        <animation
+                            animationProps={{
+                                radius: {
+                                    start: 0,
+                                    end: 7
+                                }
+                            }}
+                            delay={750}
+                            duration={500}
+                        >
+                            <circle top={13} left={15} />
+                        </animation>
 
                         <text
                             alignment={'left'}
                             height={30}
-                            left={20}
+                            left={30}
                             width={10 * what.length}
                         >
                             {what}
