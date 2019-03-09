@@ -1,6 +1,6 @@
 {
   "name": "@pebble-react/example",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "main": "index.js",
   "license": "MIT",
   "private": false,
@@ -16,7 +16,7 @@
     ]
   },
   "dependencies": {
-    "@pebble-react/core": "0.0.5"
+    "@pebble-react/core": "^0.0.6"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
