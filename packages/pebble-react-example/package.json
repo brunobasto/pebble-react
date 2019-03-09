@@ -4,5 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "private": false,
-  "gitHead": "4fc27dc76512955c7347efbe7dfc19963399a50c"
+  "gitHead": "4fc27dc76512955c7347efbe7dfc19963399a50c",
+  "dependencies": {
+    "@pebble-react/core": "0.0.5"
+  }
 }
