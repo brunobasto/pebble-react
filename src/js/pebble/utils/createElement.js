@@ -1,6 +1,7 @@
 import {
     Root,
     Animation,
+    ArcLayer,
     CircleLayer,
     ImageLayer,
     Layer,
@@ -17,12 +18,13 @@ import { NodeTypes } from './constants';
  */
 function createElement(type, props) {
     const COMPONENTS = {
-        'window': () => new Window(props, NodeTypes.windowLayer),
-        'circle': () => new CircleLayer(props, NodeTypes.circleLayer),
-        'text': () => new TextLayer(props, NodeTypes.textLayer),
-        'image': () => new ImageLayer(props, NodeTypes.imageLayer),
         'animation': () => new Animation(props, NodeTypes.animation),
+        'arc': () => new ArcLayer(props, NodeTypes.arcLayer),
+        'circle': () => new CircleLayer(props, NodeTypes.circleLayer),
+        'image': () => new ImageLayer(props, NodeTypes.imageLayer),
         'layer': () => new Layer(props, NodeTypes.layer),
+        'text': () => new TextLayer(props, NodeTypes.textLayer),
+        'window': () => new Window(props, NodeTypes.windowLayer),
         ROOT: () => new Root({}, NodeTypes.rootLayer),
         default: undefined
     }

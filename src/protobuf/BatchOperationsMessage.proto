@@ -26,6 +26,22 @@ message TextLayerPropsMessage {
    bool layerPropsChanged = 8;
 }
 
+message ArcLayerPropsMessage {
+   int32 endAngle = 1 [(nanopb).int_size = IS_16];
+   uint32 radius = 2 [(nanopb).int_size = IS_8];
+   int32 startAngle = 3 [(nanopb).int_size = IS_16];
+   LayerPropsMessage layerProps = 4 [(nanopb).type = FT_POINTER];
+   uint32 strokeColor = 5;
+   uint32 strokeWidth = 6 [(nanopb).int_size = IS_8];
+   // Flags for diffing what changed
+   bool endAngleChanged = 7;
+   bool startAngleChanged = 8;
+   bool radiusChanged = 9;
+   bool layerPropsChanged = 10;
+   bool strokeColorChanged = 11;
+   bool strokeWidthChanged = 12;
+}
+
 message CircleLayerPropsMessage {
    uint32 radius = 1 [(nanopb).int_size = IS_8];
    LayerPropsMessage layerProps = 2 [(nanopb).type = FT_POINTER];
@@ -64,6 +80,7 @@ message OperationMessage {
    AnimationPropsMessage animationProps = 6 [(nanopb).type = FT_POINTER];
    LayerPropsMessage layerProps = 7 [(nanopb).type = FT_POINTER];
    CircleLayerPropsMessage circleLayerProps = 8 [(nanopb).type = FT_POINTER];
+   ArcLayerPropsMessage arcLayerProps = 9 [(nanopb).type = FT_POINTER];
 }
 
 message BatchOperationsMessage {

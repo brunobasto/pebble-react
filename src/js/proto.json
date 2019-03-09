@@ -96,6 +96,54 @@
         }
       }
     },
+    "ArcLayerPropsMessage": {
+      "fields": {
+        "endAngle": {
+          "type": "int32",
+          "id": 1,
+          "options": {
+            "(nanopb).int_size": "IS_16"
+          }
+        },
+        "radius": {
+          "type": "uint32",
+          "id": 2,
+          "options": {
+            "(nanopb).int_size": "IS_8"
+          }
+        },
+        "startAngle": {
+          "type": "int32",
+          "id": 3,
+          "options": {
+            "(nanopb).int_size": "IS_16"
+          }
+        },
+        "layerProps": {
+          "type": "LayerPropsMessage",
+          "id": 4,
+          "options": {
+            "(nanopb).type": "FT_POINTER"
+          }
+        },
+        "endAngleChanged": {
+          "type": "bool",
+          "id": 5
+        },
+        "startAngleChanged": {
+          "type": "bool",
+          "id": 6
+        },
+        "radiusChanged": {
+          "type": "bool",
+          "id": 7
+        },
+        "layerPropsChanged": {
+          "type": "bool",
+          "id": 8
+        }
+      }
+    },
     "CircleLayerPropsMessage": {
       "fields": {
         "radius": {
@@ -234,6 +282,13 @@
         "circleLayerProps": {
           "type": "CircleLayerPropsMessage",
           "id": 8,
+          "options": {
+            "(nanopb).type": "FT_POINTER"
+          }
+        },
+        "arcLayerProps": {
+          "type": "ArcLayerPropsMessage",
+          "id": 9,
           "options": {
             "(nanopb).type": "FT_POINTER"
           }

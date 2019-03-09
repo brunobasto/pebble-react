@@ -4,6 +4,7 @@
 #include "../reconcilers/constants.h"
 #include "../reconcilers/animation.h"
 #include "../reconcilers/text_layer.h"
+#include "../reconcilers/arc_layer.h"
 #include "../reconcilers/circle_layer.h"
 #include "../reconcilers/layer.h"
 
@@ -92,6 +93,18 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
     {
       operationMessage->operation = OPERATION_CLEAR_PROPS;
       text_layer_reconciler(NULL, operationMessage);
+    }
+  }
+  break;
+  case NODE_TYPE_ARC_LAYER:
+  {
+    arc_layer_reconciler(parentLayer, operationMessage);
+
+    // Makes sure we clear after ourselves
+    if (operation != OPERATION_CLEAR_PROPS)
+    {
+      operationMessage->operation = OPERATION_CLEAR_PROPS;
+      arc_layer_reconciler(NULL, operationMessage);
     }
   }
   break;

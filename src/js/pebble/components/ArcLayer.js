@@ -2,14 +2,14 @@ import Layer from './Layer';
 import protobuf from 'protobufjs';
 import protoJSON from './../../proto.json'
 
-const { CircleLayerPropsMessage } = protobuf.Root.fromJSON(protoJSON);
+const { ArcLayerPropsMessage } = protobuf.Root.fromJSON(protoJSON);
 
-class CircleLayer extends Layer {
+class ArcLayer extends Layer {
     getPropsMessage(props) {
         const diff = this.getPropsDiff(props);
 
         return {
-            circleLayerProps: CircleLayerPropsMessage.create(
+            arcLayerProps: ArcLayerPropsMessage.create(
                 {
                     ...props,
                     ...super.getPropsMessage(
@@ -25,4 +25,4 @@ class CircleLayer extends Layer {
     }
 }
 
-export default CircleLayer;
+export default ArcLayer;

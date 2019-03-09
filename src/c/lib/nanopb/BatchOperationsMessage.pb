@@ -1,5 +1,5 @@
 
-î
+¡
 BatchOperationsMessage.protonanopb.proto"è
 LayerPropsMessage
 height (Bí?8Rheight
@@ -22,6 +22,19 @@ layerProps*
 alignmentChanged (RalignmentChanged"
 colorChanged (RcolorChanged 
 textChanged (RtextChanged,
+layerPropsChanged (RlayerPropsChanged"Ê
+ArcLayerPropsMessage!
+endAngle (Bí?8RendAngle
+radius (Bí?8Rradius%
+
+startAngle (Bí?8R
+startAngle9
+
+layerProps (2.LayerPropsMessageBí?R
+layerProps(
+endAngleChanged (RendAngleChanged,
+startAngleChanged (RstartAngleChanged$
+radiusChanged (RradiusChanged,
 layerPropsChanged (RlayerPropsChanged"«
 CircleLayerPropsMessage
 radius (Bí?8Rradius9
@@ -41,7 +54,7 @@ layerProps$
 delayChanged (RdelayChanged 
 loopChanged	 (RloopChanged(
 sequenceChanged
- (RsequenceChanged"∫
+ (RsequenceChanged"˛
 OperationMessage#
 	operation (Bí?8R	operation!
 nodeType (Bí?8RnodeType
@@ -52,7 +65,8 @@ layerProps$
 
 layerProps (2.LayerPropsMessageBí?R
 layerPropsK
-circleLayerProps (2.CircleLayerPropsMessageBí?RcircleLayerProps"R
+circleLayerProps (2.CircleLayerPropsMessageBí?RcircleLayerPropsB
+arcLayerProps	 (2.ArcLayerPropsMessageBí?RarcLayerProps"R
 BatchOperationsMessage8
 
 operations (2.OperationMessageBí?R
