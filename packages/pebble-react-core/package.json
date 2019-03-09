@@ -11,8 +11,8 @@
     ],
     "presets": [
       "es2015",
-      "stage-2",
-      "react"
+      "react",
+      "stage-2"
     ]
   },
   "dependencies": {
@@ -79,5 +79,6 @@
         }
       ]
     }
-  }
+  },
+  "gitHead": "4fc27dc76512955c7347efbe7dfc19963399a50c"
 }
