@@ -1,0 +1,7 @@
+{
+  "name": "@pebble-react/example",
+  "version": "0.0.1",
+  "main": "index.js",
+  "license": "MIT",
+  "private": false
+}
