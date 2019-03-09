@@ -1,4 +1,4 @@
-node_modules
+node_modules/
 build
 .lock-waf_darwin_build
 src/js/bundle.js

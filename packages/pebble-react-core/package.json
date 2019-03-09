@@ -74,11 +74,6 @@
     "resources": {
       "media": [
         {
-          "file": "images/ajax-loader.png",
-          "name": "SPINNER",
-          "type": "raw"
-        },
-        {
           "file": "images/static.png",
           "name": "STATIC",
           "type": "bitmap"
