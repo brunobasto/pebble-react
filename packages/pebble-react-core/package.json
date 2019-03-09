@@ -5,7 +5,6 @@
   "keywords": [
     "pebble-app"
   ],
-  "private": true,
   "babel": {
     "plugins": [
       "transform-decorators-legacy"
