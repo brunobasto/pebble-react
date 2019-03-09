@@ -25,6 +25,14 @@ class App extends Component {
 
         return (
             <Fragment>
+                <arc
+                    top={55}
+                    left={70}
+                    radius={50}
+                    startAngle={-90}
+                    endAngle={90}
+                />
+
                 <animation
                     animationProps={{
                         left: {
