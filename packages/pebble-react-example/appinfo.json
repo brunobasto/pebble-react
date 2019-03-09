@@ -1,0 +1,29 @@
+{
+    "displayName": "React Example",
+    "uuid": "aad6f4cd-02a3-40ea-a180-5ec43b037eb2",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk",
+      "diorite"
+    ],
+    "watchapp": {
+      "watchface": false
+    },
+    "messageKeys": [
+      "batchOperations",
+      "batchOperationsByteLength",
+      "message"
+    ],
+    "resources": {
+      "media": [
+        {
+          "file": "images/static.png",
+          "name": "STATIC",
+          "type": "bitmap"
+        }
+      ]
+    }
+  }
