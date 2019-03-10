@@ -6,6 +6,8 @@ const mkdirp = require('mkdirp');
 const path = require('path');
 const rimraf = require("rimraf");
 var download = require('github-download-directory');
+const { exec } = require('child_process');
+const commandExists = require('command-exists');
 
 require('yargs') // eslint-disable-line
 	.command(
@@ -101,24 +103,73 @@ require('yargs') // eslint-disable-line
 			if (!fs.existsSync(targetFolder)) {
 				mkdirp.sync(targetFolder);
 			}
+			else {
+				console.log(`The folder ${targetFolder} already exists. Please try this on an empty directory.`);
 
-			download('brunobasto', 'pebble-react', 'packages', {sha: '2fa4260874e252b84a4bbcc5fc037f81e066ecee'})
-			.then(() => {
-				ncp(
-					path.join(process.cwd(), 'packages', 'pebble-react-example'),
-					targetFolder,
-					(error) => {
-						if (error) {
-							console.log('Error creating boilerplate', error);
+				process.exit(1);
+			}
 
-							return;
-						}
+			console.log('Downloading boilerplate...');
 
-						rimraf.sync(path.join(process.cwd(), 'packages'));
+			download('brunobasto', 'pebble-react', 'packages', { sha: '2fa4260874e252b84a4bbcc5fc037f81e066ecee' })
+				.then(() => {
+					ncp(
+						path.join(process.cwd(), 'packages', 'pebble-react-example'),
+						targetFolder,
+						(error) => {
+							if (error) {
+								console.log('Error creating boilerplate', error);
 
-						console.log('Successfully created boilerplate');
+								return;
+							}
+
+							rimraf.sync(path.join(process.cwd(), 'packages'));
+
+							console.log(`
+Successfully created boilerplate. Your application structure is:
+
+Directory: ${targetFolder}
+
+- package.json
+- webpack.config.js
+- src/
+  - App.js    [Modify this file and run "npm run build" and then "npm run emulator" to experiment with it]
+  - index.js  [The entry point containing the render() call to initialize your App]
+
+We already have configured your build scripts for you with support for ES6 syntax and webpack.
+							`);
+
+							commandExists('pebble', (err, commandExists) => {
+								const configurations = ['npm install', 'npm run build'];
+
+								if (commandExists) {
+									configurations.push('npm run emulator');
+
+									console.log(`Cool! It looks like you already have the Pebble SDK installed.
+
+We are now building your app for the first time and will try to start the emulator for you.
+Please wait...
+`);
+								}
+								else {
+									console.log(`
+It seems you don't have the Pebble SDK installed. Please install it so that you can compile your app and expriment with it using the emulator.
+For now, we are just gonna run "npm install" for you and we are done.
+`);
+								}
+
+								exec(configurations.join(' && '), {
+									cwd: targetFolder
+								}, function (error, stdout, stderr) {
+									if (error) {
+										console.log('Sorry, there was a problem building your app. Please checkout the error log:');
+										console.log(stderr);
+									}
+									console.log('We are done! Your app should be running on the Pebble emulator now.');
+								});
+							});
+						});
 				});
-			});
 
 		}
 	)
