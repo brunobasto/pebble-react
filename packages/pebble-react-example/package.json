@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "private": false,
-  "gitHead": "4fc27dc76512955c7347efbe7dfc19963399a50c",
+  "gitHead": "fca52ef3a666d752f3f294390159bb6a03e47a04",
   "babel": {
     "plugins": [
       "syntax-async-functions",

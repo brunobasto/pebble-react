@@ -1,5 +1,5 @@
 {
-  "name": "pebble-react-builder",
+  "name": "@pebble-react/builder",
   "version": "0.0.2",
   "description": "CLI for building apps created with pebble-react-create",
   "bin": {
@@ -15,5 +15,6 @@
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
     "yargs": "^13.2.2"
-  }
+  },
+  "gitHead": "fca52ef3a666d752f3f294390159bb6a03e47a04"
 }
