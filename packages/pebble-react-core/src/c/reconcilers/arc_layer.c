@@ -27,16 +27,28 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
   const GRect frame = layer_get_frame(layer);
   const GRect rect = GRect(0, 0, frame.size.w, frame.size.h);
 
-  graphics_context_set_stroke_width(ctx, 1);
   graphics_context_set_stroke_color(ctx, GColorBlack);
 
-  // Draw the arc
-  graphics_draw_arc(
+  if (props->thicknessChanged)
+  {
+    graphics_fill_radial(
+      ctx,
+      rect,
+      GOvalScaleModeFitCircle,
+      props->thickness,
+      DEG_TO_TRIGANGLE(props->startAngle),
+      DEG_TO_TRIGANGLE(props->endAngle));
+  }
+  else {
+    graphics_context_set_stroke_width(ctx, 1);
+
+    graphics_draw_arc(
       ctx,
       rect,
       GOvalScaleModeFitCircle,
       DEG_TO_TRIGANGLE(props->startAngle),
       DEG_TO_TRIGANGLE(props->endAngle));
+  }
 }
 
 void arc_layer_reconciler_merge_props(
@@ -48,6 +60,11 @@ void arc_layer_reconciler_merge_props(
   {
     target->radiusChanged = true;
     target->radius = source->radius;
+  }
+  if (source->thicknessChanged || force)
+  {
+    target->thicknessChanged = true;
+    target->thickness = source->thickness;
   }
   if (source->startAngleChanged || force)
   {

@@ -29,6 +29,7 @@ class App extends Component {
                     top={55}
                     left={70}
                     radius={50}
+                    thickness={30}
                     startAngle={-90}
                     endAngle={90}
                 />

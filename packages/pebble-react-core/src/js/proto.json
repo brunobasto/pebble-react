@@ -126,21 +126,51 @@
             "(nanopb).type": "FT_POINTER"
           }
         },
+        "strokeColor": {
+          "type": "uint32",
+          "id": 5
+        },
+        "strokeWidth": {
+          "type": "uint32",
+          "id": 6,
+          "options": {
+            "(nanopb).int_size": "IS_8"
+          }
+        },
+        "thickness": {
+          "type": "uint32",
+          "id": 7,
+          "options": {
+            "(nanopb).int_size": "IS_8"
+          }
+        },
         "endAngleChanged": {
           "type": "bool",
-          "id": 5
+          "id": 8
         },
         "startAngleChanged": {
           "type": "bool",
-          "id": 6
+          "id": 9
         },
         "radiusChanged": {
           "type": "bool",
-          "id": 7
+          "id": 10
         },
         "layerPropsChanged": {
           "type": "bool",
-          "id": 8
+          "id": 11
+        },
+        "strokeColorChanged": {
+          "type": "bool",
+          "id": 12
+        },
+        "strokeWidthChanged": {
+          "type": "bool",
+          "id": 13
+        },
+        "thicknessChanged": {
+          "type": "bool",
+          "id": 14
         }
       }
     },

@@ -33,13 +33,15 @@ message ArcLayerPropsMessage {
    LayerPropsMessage layerProps = 4 [(nanopb).type = FT_POINTER];
    uint32 strokeColor = 5;
    uint32 strokeWidth = 6 [(nanopb).int_size = IS_8];
+   uint32 thickness = 7 [(nanopb).int_size = IS_8];
    // Flags for diffing what changed
-   bool endAngleChanged = 7;
-   bool startAngleChanged = 8;
-   bool radiusChanged = 9;
-   bool layerPropsChanged = 10;
-   bool strokeColorChanged = 11;
-   bool strokeWidthChanged = 12;
+   bool endAngleChanged = 8;
+   bool startAngleChanged = 9;
+   bool radiusChanged = 10;
+   bool layerPropsChanged = 11;
+   bool strokeColorChanged = 12;
+   bool strokeWidthChanged = 13;
+   bool thicknessChanged = 14;
 }
 
 message CircleLayerPropsMessage {
