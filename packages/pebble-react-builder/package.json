@@ -1,0 +1,19 @@
+{
+  "name": "pebble-react-builder",
+  "version": "0.0.1",
+  "description": "CLI for building apps created with pebble-react-create",
+  "bin": {
+    "pebble-react": "bin/cli.js"
+  },
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Bruno Basto",
+  "license": "ISC",
+  "dependencies": {
+    "mkdirp": "^0.5.1",
+    "ncp": "^2.0.0",
+    "yargs": "^13.2.2"
+  }
+}
