@@ -70,16 +70,7 @@
       "batchOperations",
       "batchOperationsByteLength",
       "message"
-    ],
-    "resources": {
-      "media": [
-        {
-          "file": "images/static.png",
-          "name": "STATIC",
-          "type": "bitmap"
-        }
-      ]
-    }
+    ]
   },
   "gitHead": "4fc27dc76512955c7347efbe7dfc19963399a50c"
 }

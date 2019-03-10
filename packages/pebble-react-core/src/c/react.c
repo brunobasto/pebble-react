@@ -22,7 +22,7 @@
 #include "./reconcilers/layer.h"
 #include "./reconcilers/animation.h"
 #include "./reconcilers/arc_layer.h"
-#include "./reconcilers/image_layer.h"
+
 #include "./reconcilers/text_layer.h"
 #include "./reconcilers/circle_layer.h"
 
