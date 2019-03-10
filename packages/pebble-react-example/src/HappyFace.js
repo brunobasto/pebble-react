@@ -24,6 +24,7 @@ class HappyFace extends Component {
                     left={70}
                     radius={50}
                     startAngle={90}
+                    thickness={5}
                     endAngle={270}
                 />
             </Fragment>
