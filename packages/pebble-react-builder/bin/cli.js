@@ -102,7 +102,7 @@ require('yargs') // eslint-disable-line
 				mkdirp.sync(targetFolder);
 			}
 
-			download('brunobasto', 'pebble-react', 'packages/pebble-react-example', 'HEAD')
+			download('brunobasto', 'pebble-react', 'packages', {sha: '2fa4260874e252b84a4bbcc5fc037f81e066ecee'})
 			.then(() => {
 				ncp(
 					path.join(process.cwd(), 'packages', 'pebble-react-example'),
