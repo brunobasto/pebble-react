@@ -1,4 +1,5 @@
 import React, { Component, Fragment } from 'react';
+import HappyFace from './HappyFace';
 
 const letterWidth = 29;
 
@@ -25,14 +26,9 @@ class App extends Component {
 
         return (
             <Fragment>
-                <arc
-                    top={55}
-                    left={70}
-                    radius={50}
-                    startAngle={-90}
-                    endAngle={90}
-                />
-
+                {/* Imported custom component */}
+                <HappyFace />
+                {/* Animated layer with nested animated circle */}
                 <animation
                     animationProps={{
                         left: {
@@ -41,7 +37,7 @@ class App extends Component {
                         },
                         top: {
                             start: -30,
-                            end: 0
+                            end: 90
                         }
                     }}
                     duration={750}
@@ -86,7 +82,7 @@ class App extends Component {
                         </animation>
                     </layer>
                 </animation>
-
+                {/* Animated letters */}
                 {'Rocks'.split('').map((letter, index) => (
                     <animation
                         animationProps={{
@@ -105,7 +101,7 @@ class App extends Component {
                             color="#5F98E1"
                             height={30}
                             left={index % 2 == 0 ? letterWidth * -1 : 200}
-                            top={65}
+                            top={120}
                             width={letterWidth}
                         >
                             {letter}
