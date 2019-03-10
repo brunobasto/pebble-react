@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
-const path = require('path');
-const {ncp} = require('ncp');
+const { ncp } = require('ncp');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
+const path = require('path');
+const rimraf = require("rimraf");
+var download = require('github-download-directory');
 
 // Current dir package.json
 const cwdPackagePath = path.join(process.cwd(), 'package.json');
@@ -81,10 +83,43 @@ require('yargs') // eslint-disable-line
 			});
 		}
 	)
-	.option(
-		'verbose', {
-			alias: 'v',
-			default: false
+	.command(
+		'create [name]',
+		'Creates a boilerplate application.',
+		(yargs) => {
+			yargs
+				.positional(
+					'name', {
+						describe: 'The name of your application',
+						default: 'Example'
+					}
+				)
+		},
+		(argv) => {
+			const targetFolder = path.join(process.cwd(), argv.name);
+
+			if (!fs.existsSync(targetFolder)) {
+				mkdirp.sync(targetFolder);
+			}
+
+			download('brunobasto', 'pebble-react', 'packages/pebble-react-example', 'HEAD')
+			.then(() => {
+				ncp(
+					path.join(process.cwd(), 'packages', 'pebble-react-example'),
+					targetFolder,
+					(error) => {
+						if (error) {
+							console.log('Error creating boilerplate', error);
+
+							return;
+						}
+
+						rimraf.sync(path.join(process.cwd(), 'packages'));
+
+						console.log('Successfully created boilerplate');
+				});
+			});
+
 		}
 	)
 	.argv
