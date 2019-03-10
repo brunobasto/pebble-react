@@ -27,7 +27,7 @@ const config = {
   },
   output: {
     filename: 'bundle.js',
-    path: path.resolve('build/react/src/js')
+    path: path.resolve('build/src/js')
   },
   plugins: [
     new webpack.DefinePlugin({ "process.env.NODE_ENV": JSON.stringify("production") }),
