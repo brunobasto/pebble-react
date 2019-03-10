@@ -111,7 +111,7 @@ require('yargs') // eslint-disable-line
 
 			console.log('Downloading boilerplate...');
 
-			download('brunobasto', 'pebble-react', 'packages', { sha: '2fa4260874e252b84a4bbcc5fc037f81e066ecee' })
+			download('brunobasto', 'pebble-react', 'packages', { sha: 'c63b6f62d1538c0239760d79afa410cfaf508b9b' })
 				.then(() => {
 					ncp(
 						path.join(process.cwd(), 'packages', 'pebble-react-example'),
