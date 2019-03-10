@@ -7,21 +7,6 @@ const path = require('path');
 const rimraf = require("rimraf");
 var download = require('github-download-directory');
 
-// Current dir package.json
-const cwdPackagePath = path.join(process.cwd(), 'package.json');
-
-if (!fs.existsSync(cwdPackagePath)) {
-	console.error('Please run pebble-react from a directory containing a package.json file.');
-	process.exit(1);
-}
-
-const cwdPackage = require(cwdPackagePath);
-
-// Path to @pebble-react/core
-const corePackagePath = require.resolve("@pebble-react/core/package.json");
-const corePath = path.dirname(corePackagePath);
-const corePackage = require(corePackagePath);
-
 require('yargs') // eslint-disable-line
 	.command(
 		'build [dest]',
@@ -38,6 +23,21 @@ require('yargs') // eslint-disable-line
 				)
 		},
 		(argv) => {
+			// Current dir package.json
+			const cwdPackagePath = path.join(process.cwd(), 'package.json');
+
+			if (!fs.existsSync(cwdPackagePath)) {
+				console.error('Please run pebble-react from a directory containing a package.json file.');
+				process.exit(1);
+			}
+
+			const cwdPackage = require(cwdPackagePath);
+
+			// Path to @pebble-react/core
+			const corePackagePath = require.resolve("@pebble-react/core/package.json");
+			const corePath = path.dirname(corePackagePath);
+			const corePackage = require(corePackagePath);
+
 			// Copy C source files
 			const cSourcePath = path.join(corePath, 'src', 'c');
 			const cDestPath = path.join(argv.dest, 'src', 'c');
