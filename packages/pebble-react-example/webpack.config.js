@@ -13,10 +13,6 @@ const config = {
   module: {
     loaders: [
       {
-        exclude: [
-          /node_modules/
-        ],
-        // include: __dirname,
         loaders: ['babel-loader'],
       },
       {
