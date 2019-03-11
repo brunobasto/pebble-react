@@ -60,16 +60,9 @@ class PebbleComponent {
     }
 
     prepareUpdate(oldProps, newProps) {
-        if (oldProps === newProps) {
-            return false;
-        }
-
         for (const key in newProps) {
             if (typeof oldProps[key] !== typeof newProps[key]) {
                 return true;
-            }
-            else if (oldProps[key] === newProps[key]) {
-                continue;
             }
             else if (Array.isArray(oldProps[key]) && Array.isArray(newProps[key])) {
                 return true;
@@ -89,6 +82,9 @@ class PebbleComponent {
                 typeof oldProps[key] === 'object' &&
                 this.prepareUpdate(oldProps[key], newProps[key])
             ) {
+                return true;
+            }
+            else if (oldProps[key] !== newProps[key]) {
                 return true;
             }
         }
