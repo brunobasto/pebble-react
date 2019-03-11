@@ -3,8 +3,16 @@ import {perc2color} from './utils';
 
 class GaugeChart extends Component {
     static defaultProps = {
+        emptyColor: '#81898c',
+        left: 0,
+        maxValue: 100,
+        minValue: 0,
         padding: 3,
-        sections: 3
+        sections: 5,
+        thickness: 10,
+        top: 0,
+        value: 0,
+        width: 144
     };
 
     getSectionColor(index) {
@@ -20,28 +28,56 @@ class GaugeChart extends Component {
         return (180 - padding * (sections - 1)) / sections;
     }
 
-    renderArcs() {
+    renderSections() {
         const {
+            emptyColor,
+            left,
+            maxValue,
+            minValue,
             padding,
+            thickness,
             top,
-            thickness
+            value,
+            width
         } = this.props;
         const arcs = [];
         const sectionSize = this.getSectionSize();
 
+        const angleValue = (value / (maxValue - minValue)) * 180 - 90;
+
+        const arcProps = {
+            left: left + width / 2,
+            radius: width / 2,
+            thickness: thickness,
+            top: top + width / 2
+        };
+        let index = 0;
+
         for (let startAngle = -90; startAngle < 90; startAngle += sectionSize) {
+            let endAngle = startAngle + sectionSize;
+
+            if (startAngle < angleValue && endAngle > angleValue) {
+                endAngle = angleValue;
+
+                arcs.push(
+                    <arc
+                        {...arcProps}
+                        color={emptyColor}
+                        startAngle={angleValue}
+                        endAngle={startAngle + sectionSize}
+                    />
+                );
+            }
+
             arcs.push(
                 <arc
-                    color={this.getSectionColor(arcs.length)}
-                    top={top}
-                    left={70}
-                    radius={50}
+                    {...arcProps}
+                    color={startAngle > angleValue ? emptyColor : this.getSectionColor(index)}
                     startAngle={startAngle}
-                    thickness={thickness}
-                    endAngle={startAngle + sectionSize}
+                    endAngle={endAngle}
                 />
             );
-
+            index++;
             startAngle += padding;
         }
 
@@ -49,13 +85,9 @@ class GaugeChart extends Component {
     }
 
     render() {
-        const {
-            sections
-        } = this.props;
-
         return (
             <Fragment>
-                {this.renderArcs(sections)}
+                {this.renderSections()}
             </Fragment>
         );
     }
