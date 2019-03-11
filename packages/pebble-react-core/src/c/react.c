@@ -22,11 +22,8 @@
 #include "./reconcilers/layer.h"
 #include "./reconcilers/animation.h"
 #include "./reconcilers/arc_layer.h"
-
 #include "./reconcilers/text_layer.h"
 #include "./reconcilers/circle_layer.h"
-
-AppTimer *timer;
 
 static Window *mainWindow;
 
@@ -46,12 +43,12 @@ static void sendMessage(void *context, char *message)
 
 static void prv_select_click_handler(ClickRecognizerRef recognizer, void *context)
 {
-  // text_layer_set_text(s_text_layer, "Select");
+  // TODO
 }
 
 static void prv_up_click_handler(ClickRecognizerRef recognizer, void *context)
 {
-  // text_layer_set_text(s_text_layer, "Up");
+  // TODO
 }
 
 static void prv_down_click_handler(ClickRecognizerRef recognizer, void *context)
@@ -149,7 +146,6 @@ static void appInit(void)
   layer_reconciler_init();
   text_layer_reconciler_init();
   arc_layer_reconciler_init();
-  // image_layer_reconciler_init();
   animation_reconciler_init();
   circle_layer_reconciler_init();
 
@@ -176,30 +172,7 @@ static void appDeinit(void)
 
 int main(void)
 {
-  // assert_dict_add_remove();
-  // assert_dict_foreach_count();
-  // assert_dict_new_free();
-
-  // assert_json_object_parse();
-  // assert_json_array_parse();
-
-  // assert_substr();
-
   mainWindow = window_create();
-
-  // assert_animation_reconciler_init_deinit();
-  // assert_animation_reconciler_add_remove(mainWindow);
-
-  // assert_text_reconciler_init_deinit();
-  // assert_text_reconciler_add_remove(mainWindow);
-  // assert_text_reconciler_remove_leftovers(mainWindow);
-  // assert_text_reconciler_commit_update(mainWindow);
-
-  // assert_operation_copy();
-  // assert_operations_process_batch(mainWindow);
-
-  // window_stack_pop_all(false);
-  // window_destroy(mainWindow);
 
   appInit();
   app_event_loop();
