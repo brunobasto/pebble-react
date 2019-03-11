@@ -77,7 +77,7 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
     layer_reconciler(parentLayer, operationMessage);
 
     // Makes sure we clear after ourselves
-    if (operation != OPERATION_CLEAR_PROPS)
+    if (operation != OPERATION_CLEAR_PROPS && operation != OPERATION_REMOVE_CHILD)
     {
       operationMessage->operation = OPERATION_CLEAR_PROPS;
       layer_reconciler(NULL, operationMessage);
@@ -89,7 +89,7 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
     text_layer_reconciler(parentLayer, operationMessage);
 
     // Makes sure we clear after ourselves
-    if (operation != OPERATION_CLEAR_PROPS)
+    if (operation != OPERATION_CLEAR_PROPS && operation != OPERATION_REMOVE_CHILD)
     {
       operationMessage->operation = OPERATION_CLEAR_PROPS;
       text_layer_reconciler(NULL, operationMessage);
@@ -101,7 +101,7 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
     arc_layer_reconciler(parentLayer, operationMessage);
 
     // Makes sure we clear after ourselves
-    if (operation != OPERATION_CLEAR_PROPS)
+    if (operation != OPERATION_CLEAR_PROPS && operation != OPERATION_REMOVE_CHILD)
     {
       operationMessage->operation = OPERATION_CLEAR_PROPS;
       arc_layer_reconciler(NULL, operationMessage);
@@ -113,7 +113,7 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
     circle_layer_reconciler(parentLayer, operationMessage);
 
     // Makes sure we clear after ourselves
-    if (operation != OPERATION_CLEAR_PROPS)
+    if (operation != OPERATION_CLEAR_PROPS && operation != OPERATION_REMOVE_CHILD)
     {
       operationMessage->operation = OPERATION_CLEAR_PROPS;
       circle_layer_reconciler(NULL, operationMessage);
@@ -125,7 +125,7 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
     animation_reconciler(parentLayer, operationMessage);
 
     // Makes sure we clear after ourselves
-    if (operation != OPERATION_CLEAR_PROPS)
+    if (operation != OPERATION_CLEAR_PROPS && operation != OPERATION_REMOVE_CHILD)
     {
       operationMessage->operation = OPERATION_CLEAR_PROPS;
       animation_reconciler(NULL, operationMessage);
