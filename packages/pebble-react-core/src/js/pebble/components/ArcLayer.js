@@ -8,6 +8,8 @@ class ArcLayer extends Layer {
     getPropsMessage(props) {
         const diff = this.getPropsDiff(props);
 
+        const color = parseInt((props.color || '#FFFFFF').replace('#', ''), 16);
+
         return {
             arcLayerProps: ArcLayerPropsMessage.create(
                 {
@@ -18,6 +20,7 @@ class ArcLayer extends Layer {
                         }
                     ),
                     ...diff,
+                    color: props.color ? color : undefined,
                     layerPropsChanged: true
                 }
             )

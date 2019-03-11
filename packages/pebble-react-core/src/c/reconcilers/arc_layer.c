@@ -27,7 +27,15 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
   const GRect frame = layer_get_frame(layer);
   const GRect rect = GRect(0, 0, frame.size.w, frame.size.h);
 
-  graphics_context_set_stroke_color(ctx, GColorBlack);
+  GColor8 color = GColorWhite;
+
+  if (props->colorChanged)
+  {
+    color = GColorFromHEX(props->color);
+  }
+
+  graphics_context_set_stroke_color(ctx, color);
+  graphics_context_set_fill_color(ctx, color);
 
   if (props->thicknessChanged)
   {
@@ -56,6 +64,11 @@ void arc_layer_reconciler_merge_props(
     ArcLayerPropsMessage *source,
     bool force)
 {
+  if (source->colorChanged || force)
+  {
+    target->colorChanged = true;
+    target->color = source->color;
+  }
   if (source->radiusChanged || force)
   {
     target->radiusChanged = true;

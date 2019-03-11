@@ -144,33 +144,41 @@
             "(nanopb).int_size": "IS_8"
           }
         },
-        "endAngleChanged": {
-          "type": "bool",
+        "color": {
+          "type": "uint32",
           "id": 8
         },
-        "startAngleChanged": {
+        "endAngleChanged": {
           "type": "bool",
           "id": 9
         },
-        "radiusChanged": {
+        "startAngleChanged": {
           "type": "bool",
           "id": 10
         },
-        "layerPropsChanged": {
+        "radiusChanged": {
           "type": "bool",
           "id": 11
         },
-        "strokeColorChanged": {
+        "layerPropsChanged": {
           "type": "bool",
           "id": 12
         },
-        "strokeWidthChanged": {
+        "strokeColorChanged": {
           "type": "bool",
           "id": 13
         },
-        "thicknessChanged": {
+        "strokeWidthChanged": {
           "type": "bool",
           "id": 14
+        },
+        "thicknessChanged": {
+          "type": "bool",
+          "id": 15
+        },
+        "colorChanged": {
+          "type": "bool",
+          "id": 16
         }
       }
     },
