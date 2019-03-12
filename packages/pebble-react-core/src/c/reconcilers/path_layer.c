@@ -20,7 +20,9 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
     return;
   }
 
-  GPath *path = (GPath *)hash_get(pathRegistry, layer);
+  GPathInfo *pathInfo = (GPathInfo *)hash_get(pathRegistry, layer);
+
+  GPath *path = gpath_create(pathInfo);
 
   GColor8 fillColor = GColorBlack;
 
@@ -43,6 +45,8 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
   // Stroke the path:
   graphics_context_set_stroke_color(ctx, strokeColor);
   gpath_draw_outline(ctx, path);
+
+  gpath_destroy(path);
 }
 
 void path_layer_reconciler_merge_props(
@@ -194,10 +198,8 @@ static void appendChild(
   Layer *layer = layer_registry_get(nodeId);
 
   GPathInfo *pathInfo = createPathInfo(layer, cachedProps);
-  GPath *path = gpath_create(pathInfo);
-  free(pathInfo);
 
-  hash_add(pathRegistry, layer, path);
+  hash_add(pathRegistry, layer, pathInfo);
   hash_add(propsRegistry, layer, cachedProps);
 
   layer_set_update_proc(layer, handleCanvasUpdate);
@@ -217,15 +219,16 @@ static void removeChild(const char *nodeId, bool removeFromRegistry)
     hash_remove(propsRegistry, layer);
   }
 
-  GPath *path = (GPath *)hash_get(pathRegistry, layer);
-  gpath_destroy(path);
+  GPathInfo *pathInfo = (GPathInfo *)hash_get(pathRegistry, layer);
+  free(pathInfo->points);
+  free(pathInfo);
   hash_remove(pathRegistry, layer);
 
   // Layer operation
   OperationMessage *layerOperation = createLayerOperation(OPERATION_REMOVE_CHILD, nodeId);
   layer_reconciler(NULL, layerOperation);
-  // free(layerOperation->nodeId);
-  // free(layerOperation);
+  free(layerOperation->nodeId);
+  free(layerOperation);
 }
 
 static void freePropsCache(void *key, void *value)
