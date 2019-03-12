@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react';
-import {perc2color} from './utils';
+import { perc2color } from './utils';
 
 class GaugeChart extends Component {
     static defaultProps = {
@@ -9,11 +9,25 @@ class GaugeChart extends Component {
         minValue: 0,
         padding: 3,
         sections: 5,
+        showPointer: true,
         thickness: 10,
         top: 0,
         value: 0,
         width: 144
     };
+
+    getCenter() {
+        const {
+            left,
+            top,
+            width
+        } = this.props;
+
+        return {
+            left: left + width / 2,
+            top: top + width / 2
+        }
+    }
 
     getSectionColor(index) {
         const { sections } = this.props;
@@ -28,15 +42,33 @@ class GaugeChart extends Component {
         return (180 - padding * (sections - 1)) / sections;
     }
 
+    renderPointer() {
+        const { thickness, width } = this.props;
+        const center = this.getCenter();
+        const pointerHeight = (width / 2) - (thickness * 1.25);
+        const pointerRadius = 6;
+
+        return (
+            <Fragment>
+                <circle left={center.left} top={center.top} radius={pointerRadius} />
+                <path
+                    points={[
+                        { x: center.left, y: center.top - pointerHeight },
+                        { x: center.left - pointerRadius, y: center.top },
+                        { x: center.left + pointerRadius, y: center.top }
+                    ]}
+                />
+            </Fragment>
+        );
+    }
+
     renderSections() {
         const {
             emptyColor,
-            left,
             maxValue,
             minValue,
             padding,
             thickness,
-            top,
             value,
             width
         } = this.props;
@@ -46,10 +78,9 @@ class GaugeChart extends Component {
         const angleValue = (value / (maxValue - minValue)) * 180 - 90;
 
         const arcProps = {
-            left: left + width / 2,
+            ...this.getCenter(),
             radius: width / 2,
             thickness: thickness,
-            top: top + width / 2
         };
         let index = 0;
 
@@ -85,9 +116,13 @@ class GaugeChart extends Component {
     }
 
     render() {
+        const {showPointer} = this.props;
+
         return (
             <Fragment>
                 {this.renderSections()}
+
+                {showPointer && this.renderPointer()}
             </Fragment>
         );
     }
