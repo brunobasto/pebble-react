@@ -1,12 +1,14 @@
 #include "operations.h"
-#include "layers_registry.h"
 
+#include "layers_registry.h"
 #include "../reconcilers/constants.h"
+
 #include "../reconcilers/animation.h"
-#include "../reconcilers/text_layer.h"
 #include "../reconcilers/arc_layer.h"
 #include "../reconcilers/circle_layer.h"
 #include "../reconcilers/layer.h"
+#include "../reconcilers/path_layer.h"
+#include "../reconcilers/text_layer.h"
 
 OperationMessage *operation_copy(OperationMessage *copy, OperationMessage operation)
 {
@@ -131,15 +133,25 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
       animation_reconciler(NULL, operationMessage);
     }
   }
+  break;
+  case NODE_TYPE_PATH_LAYER:
+  {
+    path_layer_reconciler(parentLayer, operationMessage);
+
+    // Makes sure we clear after ourselves
+    if (operation != OPERATION_CLEAR_PROPS && operation != OPERATION_REMOVE_CHILD)
+    {
+      operationMessage->operation = OPERATION_CLEAR_PROPS;
+      path_layer_reconciler(NULL, operationMessage);
+    }
+  }
+  break;
   default:
     break;
   }
 
   free(operationMessage->nodeId);
   free(operationMessage->parentNodeId);
-
-  // Reconcilers
-  // image_layer_reconciler(parentLayer, operation, nodeType, nodeId, propsDict);
 }
 
 void operations_process_batch(Window *mainWindow, BatchOperationsMessage *batchOperations)

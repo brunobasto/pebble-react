@@ -19,11 +19,12 @@
 #include "./utils/string.h"
 
 // Reconcilers
-#include "./reconcilers/layer.h"
 #include "./reconcilers/animation.h"
 #include "./reconcilers/arc_layer.h"
-#include "./reconcilers/text_layer.h"
 #include "./reconcilers/circle_layer.h"
+#include "./reconcilers/layer.h"
+#include "./reconcilers/path_layer.h"
+#include "./reconcilers/text_layer.h"
 
 static Window *mainWindow;
 
@@ -139,15 +140,15 @@ static void appInit(void)
   window_stack_push(mainWindow, animated);
   // </Window>
 
-  // Reconcilers Tests
   animation_registry_init();
   layer_registry_init();
 
-  layer_reconciler_init();
-  text_layer_reconciler_init();
-  arc_layer_reconciler_init();
   animation_reconciler_init();
+  arc_layer_reconciler_init();
   circle_layer_reconciler_init();
+  layer_reconciler_init();
+  path_layer_reconciler_init();
+  text_layer_reconciler_init();
 
   configureAppMessage();
 
@@ -156,12 +157,12 @@ static void appInit(void)
 
 static void appDeinit(void)
 {
-  text_layer_reconciler_deinit();
-  // image_layer_reconciler_deinit();
   animation_reconciler_deinit();
   arc_layer_reconciler_deinit();
   circle_layer_reconciler_deinit();
   layer_reconciler_deinit();
+  path_layer_reconciler_deinit();
+  text_layer_reconciler_deinit();
 
   animation_registry_deinit();
   layer_registry_deinit();

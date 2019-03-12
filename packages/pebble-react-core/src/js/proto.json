@@ -182,6 +182,64 @@
         }
       }
     },
+    "PointMessage": {
+      "fields": {
+        "x": {
+          "type": "int32",
+          "id": 1,
+          "options": {
+            "(nanopb).int_size": "IS_16"
+          }
+        },
+        "y": {
+          "type": "int32",
+          "id": 2,
+          "options": {
+            "(nanopb).int_size": "IS_16"
+          }
+        },
+        "xChanged": {
+          "type": "bool",
+          "id": 3
+        },
+        "yChanged": {
+          "type": "bool",
+          "id": 4
+        }
+      }
+    },
+    "PathLayerPropsMessage": {
+      "fields": {
+        "strokeColor": {
+          "type": "uint32",
+          "id": 1
+        },
+        "fillColor": {
+          "type": "uint32",
+          "id": 2
+        },
+        "points": {
+          "rule": "repeated",
+          "type": "PointMessage",
+          "id": 3,
+          "options": {
+            "(nanopb).type": "FT_POINTER"
+          }
+        },
+        "strokeColorChanged": {
+          "type": "bool",
+          "id": 4
+        },
+        "fillColorChanged": {
+          "type": "bool",
+          "id": 5
+        },
+        "pointsChanged": {
+          "type": "bool",
+          "id": 6
+        }
+      }
+    },
     "CircleLayerPropsMessage": {
       "fields": {
         "radius": {
@@ -327,6 +385,13 @@
         "arcLayerProps": {
           "type": "ArcLayerPropsMessage",
           "id": 9,
+          "options": {
+            "(nanopb).type": "FT_POINTER"
+          }
+        },
+        "pathLayerProps": {
+          "type": "PathLayerPropsMessage",
+          "id": 10,
           "options": {
             "(nanopb).type": "FT_POINTER"
           }

@@ -9,14 +9,6 @@
 
 static PebbleHashMap *propsRegistry;
 
-typedef void (*LayerAnimationCallback)(
-    OperationMessage *startOperation,
-    OperationMessage *endOperation,
-    OperationMessage *resultOperation,
-    int percent);
-
-static LayerAnimationCallback callLayerAnimationCallback = NULL;
-
 static void handleCanvasUpdate(Layer *layer, GContext *ctx)
 {
   CircleLayerPropsMessage *props = (CircleLayerPropsMessage *)hash_get(propsRegistry, layer);
@@ -137,13 +129,6 @@ static void handleAnimationUpdate(
   OperationMessage *layerEndOperation = malloc(sizeof(OperationMessage));
   layerEndOperation->layerProps = endOperation->circleLayerProps->layerProps;
 
-  // Layer result Operation
-  // OperationMessage *layerResultOperation = malloc(sizeof(OperationMessage));
-
-  // Call Layer animation handler
-  // callLayerAnimationCallback = animation_registry_get_callback(NODE_TYPE_LAYER);
-  // callLayerAnimationCallback(layerStartOperation, layerEndOperation, layerResultOperation, percent);
-
   // Temp - in reality we will create a new operation and process results
   resultOperation->circleLayerProps = malloc(sizeof(CircleLayerPropsMessage));
 
@@ -158,15 +143,12 @@ static void handleAnimationUpdate(
   }
 
   resultOperation->circleLayerProps->layerPropsChanged = 0;
-  // resultOperation->circleLayerProps->layerProps = layerResultOperation->layerProps;
 
   // Clear layer start Operation
   free(layerStartOperation->nodeId);
   free(layerStartOperation);
   // Clear layer end Operation
   free(layerEndOperation);
-  // Clear layer result Operation
-  // free(layerResultOperation);
 }
 
 static CircleLayerPropsMessage *setupCachedProps(CircleLayerPropsMessage *props)

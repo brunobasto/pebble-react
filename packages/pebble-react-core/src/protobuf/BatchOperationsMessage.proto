@@ -46,6 +46,24 @@ message ArcLayerPropsMessage {
    bool colorChanged = 16;
 }
 
+message PointMessage {
+   int32 x = 1 [(nanopb).int_size = IS_16];
+   int32 y = 2 [(nanopb).int_size = IS_16];
+   // Flags for diffing what changed
+   bool xChanged = 3;
+   bool yChanged = 4;
+}
+
+message PathLayerPropsMessage {
+   uint32 strokeColor = 1;
+   uint32 fillColor = 2;
+   repeated PointMessage points = 3 [(nanopb).type = FT_POINTER];
+   // Flags for diffing what changed
+   bool strokeColorChanged = 4;
+   bool fillColorChanged = 5;
+   bool pointsChanged = 6;
+}
+
 message CircleLayerPropsMessage {
    uint32 radius = 1 [(nanopb).int_size = IS_8];
    LayerPropsMessage layerProps = 2 [(nanopb).type = FT_POINTER];
@@ -68,13 +86,6 @@ message AnimationPropsMessage {
    bool sequenceChanged = 10;
 }
 
-// message ImageLayerPropsMessage {
-//    uint32 top = 2;
-//    uint32 left = 3;
-//    uint32 height = 4;
-//    uint32 width = 5;
-// }
-
 message OperationMessage {
    uint32 operation = 1 [(nanopb).int_size = IS_8];
    uint32 nodeType = 2 [(nanopb).int_size = IS_8];
@@ -85,6 +96,7 @@ message OperationMessage {
    LayerPropsMessage layerProps = 7 [(nanopb).type = FT_POINTER];
    CircleLayerPropsMessage circleLayerProps = 8 [(nanopb).type = FT_POINTER];
    ArcLayerPropsMessage arcLayerProps = 9 [(nanopb).type = FT_POINTER];
+   PathLayerPropsMessage pathLayerProps = 10 [(nanopb).type = FT_POINTER];
 }
 
 message BatchOperationsMessage {

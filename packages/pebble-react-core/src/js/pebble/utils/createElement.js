@@ -1,10 +1,11 @@
 import {
-    Root,
     Animation,
     ArcLayer,
     CircleLayer,
     ImageLayer,
     Layer,
+    PathLayer,
+    Root,
     TextLayer,
     Window
 } from '../components';
@@ -23,6 +24,7 @@ function createElement(type, props) {
         'circle': () => new CircleLayer(props, NodeTypes.circleLayer),
         'image': () => new ImageLayer(props, NodeTypes.imageLayer),
         'layer': () => new Layer(props, NodeTypes.layer),
+        'path': () => new PathLayer(props, NodeTypes.pathLayer),
         'text': () => new TextLayer(props, NodeTypes.textLayer),
         'window': () => new Window(props, NodeTypes.windowLayer),
         ROOT: () => new Root({}, NodeTypes.rootLayer),

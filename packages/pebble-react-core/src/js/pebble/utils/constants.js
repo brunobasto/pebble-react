@@ -12,5 +12,6 @@ export const NodeTypes = {
     animation: 5,
     layer: 6,
     circleLayer: 7,
-    arcLayer: 8
+    arcLayer: 8,
+    pathLayer: 9
 }
