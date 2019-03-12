@@ -1,0 +1,18 @@
+<html>
+    <head>
+        <script>
+            window.Pebble = {
+                addEventListener: (event, callback) => {
+                    callback();
+                },
+                sendAppMessage: (message, ack, nack) => {
+                    ack();
+                }
+            };
+        </script>
+        <script src="../build/src/js/bundle.js"></script>
+    </head>
+    <body style="background-color: black">
+        <h1>React</h1>
+    </body>
+</html>
