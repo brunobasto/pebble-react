@@ -142,11 +142,11 @@ static void appInit(void)
 
   animation_registry_init();
   layer_registry_init();
+  layer_reconciler_init();
 
   animation_reconciler_init();
   arc_layer_reconciler_init();
   circle_layer_reconciler_init();
-  layer_reconciler_init();
   path_layer_reconciler_init();
   text_layer_reconciler_init();
 
@@ -160,10 +160,10 @@ static void appDeinit(void)
   animation_reconciler_deinit();
   arc_layer_reconciler_deinit();
   circle_layer_reconciler_deinit();
-  layer_reconciler_deinit();
   path_layer_reconciler_deinit();
   text_layer_reconciler_deinit();
 
+  layer_reconciler_deinit();
   animation_registry_deinit();
   layer_registry_deinit();
 
