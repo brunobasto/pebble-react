@@ -63,6 +63,9 @@ require('yargs') // eslint-disable-line
 
 			const appPackageJSON = {
 				author: cwdPackage.author,
+				devDependencies: {
+					"webpack": "^1.8.7"
+				},
 				name: cwdPackage.name,
 				pebble: corePackage.pebble,
 				version: '0.0.0'

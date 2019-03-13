@@ -8,13 +8,23 @@
   },
   "babel": {
     "plugins": [
-      "transform-decorators-legacy"
+      "@babel/plugin-proposal-class-properties"
     ],
     "presets": [
-      "es2015",
-      "react",
-      "stage-2"
+      "@babel/env",
+      "@babel/react"
     ]
+  },
+  "devDependencies": {
+    "@babel/core": "^7.3.4",
+    "@babel/plugin-proposal-class-properties": "^7.3.4",
+    "@babel/preset-env": "^7.3.4",
+    "@babel/preset-react": "^7.0.0",
+    "@babel/preset-stage-0": "^7.0.0",
+    "babel-loader": "^8.0.5",
+    "json-loader": "^0.5.7",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.2.3"
   },
   "author": "Bruno Basto",
   "license": "ISC"
