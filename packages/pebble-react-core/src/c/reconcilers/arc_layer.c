@@ -1,5 +1,6 @@
 #include "../lib/hashmap/hashmap.h"
 #include "../utils/animation_registry.h"
+#include "../utils/draw_util.h"
 #include "../utils/layers_registry.h"
 #include "../utils/operations.h"
 
@@ -25,11 +26,6 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
   }
 
   GRect frame = layer_get_frame(layer);
-
-  graphics_context_set_stroke_color(ctx, GColorBlack);
-  graphics_draw_rect(ctx, GRect(0, 0, frame.size.w, frame.size.h));
-
-  // APP_LOG(APP_LOG_LEVEL_ERROR, "inner rect [%d, %d]", props->center.x - frame.origin.x, props->center.y - frame.origin.y);
 
   const GRect rect = GRect(
       props->center.x - frame.origin.x - props->radius,
@@ -130,46 +126,34 @@ static void calculateLayer(
   const int32_t startTriangleAngle = DEG_TO_TRIGANGLE(props->startAngle);
   const int32_t endTriangleAngle = DEG_TO_TRIGANGLE(props->endAngle);
 
-  int16_t startY = props->center.y - (r * cos_lookup(startTriangleAngle) / TRIG_MAX_RATIO);
-  int16_t endY = props->center.y - (r * cos_lookup(endTriangleAngle) / TRIG_MAX_RATIO);
+  int16_t startOutterX = props->center.x + (r * sin_lookup(startTriangleAngle) / TRIG_MAX_RATIO);
+  int16_t startOutterY = props->center.y - (r * cos_lookup(startTriangleAngle) / TRIG_MAX_RATIO);
 
-  int16_t startX = props->center.x + (r * sin_lookup(startTriangleAngle) / TRIG_MAX_RATIO);
-  int16_t endX = props->center.x + (r * sin_lookup(endTriangleAngle) / TRIG_MAX_RATIO);
+  int16_t endOutterX = props->center.x + (r * sin_lookup(endTriangleAngle) / TRIG_MAX_RATIO);
+  int16_t endOutterY = props->center.y - (r * cos_lookup(endTriangleAngle) / TRIG_MAX_RATIO);
 
-  if (startX < endX)
-  {
-    layerProps->left = startX;
-    layerProps->width = (props->radius - props->thickness);
-  }
-  else
-  {
-    layerProps->left = endX;
-    layerProps->width = (props->radius - props->thickness);
-  }
+  int16_t endInnerX = props->center.x + ((r - props->thickness) * sin_lookup(endTriangleAngle) / TRIG_MAX_RATIO);
+  int16_t endInnerY = props->center.y - ((r - props->thickness) * cos_lookup(endTriangleAngle) / TRIG_MAX_RATIO);
 
-  if (startY < endY)
-  {
-    layerProps->top = startY;
-    layerProps->height = (props->radius - props->thickness);
-  }
-  else
-  {
-    layerProps->top = endY;
-    layerProps->height = (props->radius - props->thickness);
-  }
+  int16_t startInnerX = props->center.x + ((r - props->thickness) * sin_lookup(startTriangleAngle) / TRIG_MAX_RATIO);
+  int16_t startInnerY = props->center.y - ((r - props->thickness) * cos_lookup(startTriangleAngle) / TRIG_MAX_RATIO);
 
-  if (props->startAngle > 0)
-  {
-    layerProps->left -= props->thickness;
-  }
-  else
-  {
-    // layerProps->width -= props->thickness;
-  }
+  GPoint points[] = {
+    (GPoint) {endInnerX, endInnerY},
+    (GPoint) {endOutterX, endOutterY},
+    (GPoint) {startInnerX, startInnerY},
+    (GPoint) {startOutterX, startOutterY}
+  };
 
-  layerProps->topChanged = 1;
-  layerProps->leftChanged = 1;
+  GRect frame = draw_util_rect_fitting_points(points, 4);
+
+  layerProps->height = frame.size.h;
   layerProps->heightChanged = 1;
+  layerProps->left = frame.origin.x;
+  layerProps->leftChanged = 1;
+  layerProps->top = frame.origin.y;
+  layerProps->topChanged = 1;
+  layerProps->width = frame.size.w;
   layerProps->widthChanged = 1;
 }
 
