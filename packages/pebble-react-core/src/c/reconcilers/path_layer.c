@@ -139,28 +139,15 @@ static void calculateLayer(
     LayerPropsMessage *layerProps,
     GPathInfo *pathInfo)
 {
-  int16_t minX = 144, maxX = 0, minY = 168, maxY = 0;
-  GPoint *points = pathInfo->points;
+  GRect frame = draw_util_rect_fitting_points(pathInfo->points, pathInfo->num_points);
 
-  for (uint8_t i = 0; i < pathInfo->num_points; i++)
-  {
-    if (points[i].x < minX)
-      minX = points[i].x;
-    if (points[i].x > maxX)
-      maxX = points[i].x;
-    if (points[i].y < minY)
-      minY = points[i].y;
-    if (points[i].y > maxY)
-      maxY = points[i].y;
-  }
-
-  layerProps->top = minY;
+  layerProps->top = frame.origin.y;
   layerProps->topChanged = 1;
-  layerProps->left = minX;
+  layerProps->left = frame.origin.x;
   layerProps->leftChanged = 1;
-  layerProps->height = maxY - minY;
+  layerProps->height = frame.size.h;
   layerProps->heightChanged = 1;
-  layerProps->width = maxX - minX;
+  layerProps->width = frame.size.w;
   layerProps->widthChanged = 1;
 }
 
