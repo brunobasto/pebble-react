@@ -47,6 +47,7 @@
   },
   "scripts": {
     "build": "webpack --config webpack.config.js && pebble-react build",
-    "emulator": "cd build && pebble wipe && pebble build && pebble install --emulator basalt --logs"
+    "emulator": "cd build && pebble wipe && pebble build && pebble install --emulator basalt --logs",
+    "phone": "cd build && pebble wipe && pebble build && pebble install --phone"
   }
 }
