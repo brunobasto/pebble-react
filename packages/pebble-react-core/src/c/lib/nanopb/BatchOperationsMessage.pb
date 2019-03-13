@@ -1,5 +1,5 @@
 
-∫
+Ë
 BatchOperationsMessage.protonanopb.proto"è
 LayerPropsMessage
 height (Bí?8Rheight
@@ -22,41 +22,44 @@ layerProps*
 alignmentChanged (RalignmentChanged"
 colorChanged (RcolorChanged 
 textChanged (RtextChanged,
-layerPropsChanged (RlayerPropsChanged"ú
+layerPropsChanged (RlayerPropsChanged"Ä
 ArcLayerPropsMessage!
-endAngle (Bí?8RendAngle
-radius (Bí?8Rradius%
+endAngle (Bí?8RendAngle%
 
-startAngle (Bí?8R
-startAngle9
-
-layerProps (2.LayerPropsMessageBí?R
-layerProps 
-strokeColor (RstrokeColor'
-strokeWidth (Bí?8RstrokeWidth#
-	thickness (Bí?8R	thickness
-color (Rcolor(
-endAngleChanged	 (RendAngleChanged,
-startAngleChanged
- (RstartAngleChanged$
-radiusChanged (RradiusChanged,
-layerPropsChanged (RlayerPropsChanged.
-strokeColorChanged (RstrokeColorChanged.
-strokeWidthChanged (RstrokeWidthChanged*
-thicknessChanged (RthicknessChanged"
-colorChanged (RcolorChanged"p
+startAngle (Bí?8R
+startAngle%
+center (2.PointMessageRcenter
+color (Rcolor
+radius (Bí?8Rradius 
+strokeColor (RstrokeColor'
+strokeWidth (Bí?8RstrokeWidth#
+	thickness (Bí?8R	thickness$
+centerChanged	 (RcenterChanged"
+colorChanged
+ (RcolorChanged(
+endAngleChanged (RendAngleChanged$
+radiusChanged (RradiusChanged,
+startAngleChanged (RstartAngleChanged.
+strokeColorChanged (RstrokeColorChanged.
+strokeWidthChanged (RstrokeWidthChanged*
+thicknessChanged (RthicknessChanged"p
 PointMessage
 x (Bí?8Rx
 y (Bí?8Ry
 xChanged (RxChanged
-yChanged (RyChanged"á
-PathLayerPropsMessage 
-strokeColor (RstrokeColor
-	fillColor (R	fillColor,
-points (2.PointMessageBí?Rpoints.
-strokeColorChanged (RstrokeColorChanged*
-fillColorChanged (RfillColorChanged$
-pointsChanged (RpointsChanged"«
+yChanged (RyChanged"—
+PathLayerPropsMessage+
+rotationAngle (Bí?8RrotationAngle3
+rotationPoint (2.PointMessageRrotationPoint,
+points (2.PointMessageBí?Rpoints
+	fillColor (R	fillColor 
+strokeColor (RstrokeColor*
+fillColorChanged (RfillColorChanged$
+pointsChanged (RpointsChanged2
+rotationAngleChanged (RrotationAngleChanged2
+rotationPointChanged	 (RrotationPointChanged.
+strokeColorChanged
+ (RstrokeColorChanged"«
 CircleLayerPropsMessage
 radius (Bí?8Rradius9
 
