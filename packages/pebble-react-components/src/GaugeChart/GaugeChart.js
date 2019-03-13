@@ -50,7 +50,7 @@ class GaugeChart extends Component {
 
         const currentValue = Math.min(maxValue, Math.max(minValue, value));
 
-        return (currentValue / (maxValue - minValue)) * 180;
+        return (currentValue / (maxValue - minValue)) * 180 - 90;
     }
 
     renderPointer() {
@@ -128,7 +128,7 @@ class GaugeChart extends Component {
             arcs.push(
                 <arc
                     {...arcProps}
-                    color={startAngle > valueAngle ? emptyColor : this.getSectionColor(index)}
+                    color={valueAngle > startAngle ? this.getSectionColor(index) : emptyColor}
                     startAngle={startAngle}
                     endAngle={endAngle}
                 />
