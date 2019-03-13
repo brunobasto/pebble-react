@@ -24,8 +24,8 @@ class GaugeChart extends Component {
         } = this.props;
 
         return {
-            left: left + width / 2,
-            top: top + width / 2
+            x: left + width / 2,
+            y: top + width / 2
         }
     }
 
@@ -42,22 +42,51 @@ class GaugeChart extends Component {
         return (180 - padding * (sections - 1)) / sections;
     }
 
+    getValueAngle(value) {
+        const {
+            maxValue,
+            minValue
+        } = this.props;
+
+        const currentValue = Math.min(maxValue, Math.max(minValue, value));
+
+        return (currentValue / (maxValue - minValue)) * 180;
+    }
+
     renderPointer() {
-        const { thickness, width } = this.props;
+        const { minValue, thickness, width, value } = this.props;
         const center = this.getCenter();
         const pointerHeight = (width / 2) - (thickness * 1.25);
         const pointerRadius = 6;
+        const valueAngle = this.getValueAngle(value);
+        const minValueAngle = this.getValueAngle(minValue);
 
         return (
             <Fragment>
-                <circle left={center.left} top={center.top} radius={pointerRadius} />
-                <path
-                    points={[
-                        { x: center.left, y: center.top - pointerHeight },
-                        { x: center.left - pointerRadius, y: center.top },
-                        { x: center.left + pointerRadius, y: center.top }
-                    ]}
+                <circle
+                    left={center.x}
+                    radius={pointerRadius}
+                    top={center.y}
                 />
+                <animation
+                    animationProps={{
+                        rotationAngle: {
+                            start: minValueAngle * -1,
+                            end: valueAngle * -1
+                        }
+                    }}
+                    duration={1000}
+                >
+                    <path
+                        points={[
+                            { x: center.x, y: center.y - pointerHeight },
+                            { x: center.x - pointerRadius, y: center.y },
+                            { x: center.x + pointerRadius, y: center.y }
+                        ]}
+                        rotationPoint={center}
+                        rotationAngle={minValueAngle * -1}
+                    />
+                </animation>
             </Fragment>
         );
     }
@@ -65,20 +94,16 @@ class GaugeChart extends Component {
     renderSections() {
         const {
             emptyColor,
-            maxValue,
-            minValue,
             padding,
             thickness,
-            value,
-            width
+            width,
+            value
         } = this.props;
         const arcs = [];
         const sectionSize = this.getSectionSize();
-
-        const angleValue = (value / (maxValue - minValue)) * 180 - 90;
-
+        const valueAngle = this.getValueAngle(value);
         const arcProps = {
-            ...this.getCenter(),
+            center: this.getCenter(),
             radius: width / 2,
             thickness: thickness,
         };
@@ -87,14 +112,14 @@ class GaugeChart extends Component {
         for (let startAngle = -90; startAngle < 90; startAngle += sectionSize) {
             let endAngle = startAngle + sectionSize;
 
-            if (startAngle < angleValue && endAngle > angleValue) {
-                endAngle = angleValue;
+            if (startAngle < valueAngle && endAngle > valueAngle) {
+                endAngle = valueAngle;
 
                 arcs.push(
                     <arc
                         {...arcProps}
                         color={emptyColor}
-                        startAngle={angleValue}
+                        startAngle={valueAngle}
                         endAngle={startAngle + sectionSize}
                     />
                 );
@@ -103,7 +128,7 @@ class GaugeChart extends Component {
             arcs.push(
                 <arc
                     {...arcProps}
-                    color={startAngle > angleValue ? emptyColor : this.getSectionColor(index)}
+                    color={startAngle > valueAngle ? emptyColor : this.getSectionColor(index)}
                     startAngle={startAngle}
                     endAngle={endAngle}
                 />
@@ -116,7 +141,7 @@ class GaugeChart extends Component {
     }
 
     render() {
-        const {showPointer} = this.props;
+        const { showPointer } = this.props;
 
         return (
             <Fragment>
