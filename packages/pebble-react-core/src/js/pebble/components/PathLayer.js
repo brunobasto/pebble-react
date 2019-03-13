@@ -14,7 +14,8 @@ class PathLayer extends PebbleComponent {
                 {
                     ...props,
                     ...diff,
-                    points: this.getPointsMessage(points)
+                    points: this.getPointsMessage(points),
+                    rotationPoint: this.getRotationPoint(props.rotationPoint)
                 }
             )
         }
@@ -26,6 +27,14 @@ class PathLayer extends PebbleComponent {
         }
 
         return points.map(point => PointMessage.create(point));
+    }
+
+    getRotationPoint(point) {
+        if (!point) {
+            return undefined;
+        }
+
+        return PointMessage.create(point);
     }
 }
 

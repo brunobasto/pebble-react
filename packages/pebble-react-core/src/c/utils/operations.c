@@ -38,6 +38,14 @@ OperationMessage *operation_copy(OperationMessage *copy, OperationMessage operat
     text_layer_reconciler_merge_props(copy->textLayerProps, operation.textLayerProps, true);
   }
   break;
+  case NODE_TYPE_PATH_LAYER:
+  {
+    copy->pathLayerProps = malloc(sizeof(PathLayerPropsMessage));
+    copy->pathLayerProps->points = NULL;
+
+    path_layer_reconciler_merge_props(copy->pathLayerProps, operation.pathLayerProps, true);
+  }
+  break;
   case NODE_TYPE_CIRCLE_LAYER:
   {
     copy->circleLayerProps = malloc(sizeof(CircleLayerPropsMessage));

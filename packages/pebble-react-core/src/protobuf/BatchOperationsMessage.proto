@@ -28,22 +28,22 @@ message TextLayerPropsMessage {
 
 message ArcLayerPropsMessage {
    int32 endAngle = 1 [(nanopb).int_size = IS_16];
-   uint32 radius = 2 [(nanopb).int_size = IS_8];
-   int32 startAngle = 3 [(nanopb).int_size = IS_16];
-   LayerPropsMessage layerProps = 4 [(nanopb).type = FT_POINTER];
-   uint32 strokeColor = 5;
-   uint32 strokeWidth = 6 [(nanopb).int_size = IS_8];
-   uint32 thickness = 7 [(nanopb).int_size = IS_8];
-   uint32 color = 8;
+   int32 startAngle = 2 [(nanopb).int_size = IS_16];
+   PointMessage center = 3;
+   uint32 color = 4;
+   uint32 radius = 5 [(nanopb).int_size = IS_8];
+   uint32 strokeColor = 6;
+   uint32 strokeWidth = 7 [(nanopb).int_size = IS_8];
+   uint32 thickness = 8 [(nanopb).int_size = IS_8];
    // Flags for diffing what changed
-   bool endAngleChanged = 9;
-   bool startAngleChanged = 10;
-   bool radiusChanged = 11;
-   bool layerPropsChanged = 12;
-   bool strokeColorChanged = 13;
-   bool strokeWidthChanged = 14;
-   bool thicknessChanged = 15;
-   bool colorChanged = 16;
+   bool centerChanged = 9;
+   bool colorChanged = 10;
+   bool endAngleChanged = 11;
+   bool radiusChanged = 12;
+   bool startAngleChanged = 13;
+   bool strokeColorChanged = 14;
+   bool strokeWidthChanged = 15;
+   bool thicknessChanged = 16;
 }
 
 message PointMessage {
@@ -55,13 +55,17 @@ message PointMessage {
 }
 
 message PathLayerPropsMessage {
-   uint32 strokeColor = 1;
-   uint32 fillColor = 2;
+   int32 rotationAngle = 1 [(nanopb).int_size = IS_16];
+   PointMessage rotationPoint = 2;
    repeated PointMessage points = 3 [(nanopb).type = FT_POINTER];
+   uint32 fillColor = 4;
+   uint32 strokeColor = 5;
    // Flags for diffing what changed
-   bool strokeColorChanged = 4;
-   bool fillColorChanged = 5;
-   bool pointsChanged = 6;
+   bool fillColorChanged = 6;
+   bool pointsChanged = 7;
+   bool rotationAngleChanged = 8;
+   bool rotationPointChanged = 9;
+   bool strokeColorChanged = 10;
 }
 
 message CircleLayerPropsMessage {

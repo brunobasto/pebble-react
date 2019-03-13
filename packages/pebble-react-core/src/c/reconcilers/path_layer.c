@@ -1,5 +1,8 @@
+#include <math.h>
+
 #include "../lib/hashmap/hashmap.h"
 #include "../utils/animation_registry.h"
+#include "../utils/draw_util.h"
 #include "../utils/layers_registry.h"
 #include "../utils/operations.h"
 
@@ -22,7 +25,12 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
 
   GPathInfo *pathInfo = (GPathInfo *)hash_get(pathRegistry, layer);
 
-  GPath *path = gpath_create(pathInfo);
+  GPathInfo *pathInfoCopy = malloc(sizeof(GPathInfo));
+  pathInfoCopy->num_points = pathInfo->num_points;
+  pathInfoCopy->points = calloc(pathInfo->num_points, sizeof(GPoint));
+  memcpy(pathInfoCopy->points, pathInfo->points, pathInfo->num_points * sizeof(GPoint));
+
+  GPath *path = gpath_create(pathInfoCopy);
 
   GColor8 fillColor = GColorBlack;
 
@@ -46,6 +54,8 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
   graphics_context_set_stroke_color(ctx, strokeColor);
   gpath_draw_outline(ctx, path);
 
+  free(pathInfoCopy->points);
+  free(pathInfoCopy);
   gpath_destroy(path);
 }
 
@@ -64,6 +74,16 @@ void path_layer_reconciler_merge_props(
     target->strokeColorChanged = true;
     target->strokeColor = source->strokeColor;
   }
+  if (source->rotationAngleChanged || force)
+  {
+    target->rotationAngleChanged = true;
+    target->rotationAngle = source->rotationAngle;
+  }
+  if (source->rotationPointChanged || force)
+  {
+    target->rotationPointChanged = true;
+    target->rotationPoint = source->rotationPoint;
+  }
   if (source->pointsChanged || force)
   {
     target->pointsChanged = true;
@@ -78,6 +98,26 @@ void path_layer_reconciler_merge_props(
       target->points = calloc(source->points_count, sizeof(PointMessage));
       memcpy(target->points, source->points, source->points_count * sizeof(PointMessage));
     }
+  }
+}
+
+static void handleAnimationUpdate(
+    OperationMessage *startOperation,
+    OperationMessage *endOperation,
+    OperationMessage *resultOperation,
+    int percent)
+{
+  resultOperation->pathLayerProps = malloc(sizeof(PathLayerPropsMessage));
+
+  PathLayerPropsMessage *startProps = startOperation->pathLayerProps;
+  PathLayerPropsMessage *endProps = endOperation->pathLayerProps;
+
+  resultOperation->pathLayerProps->rotationAngleChanged = startProps->rotationAngleChanged;
+  resultOperation->pathLayerProps->rotationPointChanged = 0;
+
+  if (startProps->rotationAngleChanged)
+  {
+    resultOperation->pathLayerProps->rotationAngle = (int16_t)(startProps->rotationAngle + (endProps->rotationAngle - startProps->rotationAngle) * percent / 100);
   }
 }
 
@@ -97,12 +137,12 @@ static OperationMessage *createLayerOperation(
 
 static void calculateLayer(
     LayerPropsMessage *layerProps,
-    PathLayerPropsMessage *props)
+    GPathInfo *pathInfo)
 {
   int16_t minX = 144, maxX = 0, minY = 168, maxY = 0;
-  PointMessage *points = props->points;
+  GPoint *points = pathInfo->points;
 
-  for (uint8_t i = 0; i < props->points_count; i++)
+  for (uint8_t i = 0; i < pathInfo->num_points; i++)
   {
     if (points[i].x < minX)
       minX = points[i].x;
@@ -124,6 +164,36 @@ static void calculateLayer(
   layerProps->widthChanged = 1;
 }
 
+static GPathInfo *createPathInfo(PathLayerPropsMessage *props)
+{
+  GPathInfo *info = (GPathInfo *)malloc(sizeof(GPathInfo));
+  info->num_points = props->points_count;
+  info->points = (GPoint *)calloc(props->points_count, sizeof(GPoint));
+
+  for (uint8_t i = 0; i < props->points_count; i++)
+  {
+    info->points[i] = (GPoint){props->points[i].x, props->points[i].y};
+
+    if (props->rotationAngleChanged && props->rotationPointChanged)
+    {
+      GPoint center = (GPoint){props->rotationPoint.x, props->rotationPoint.y};
+
+      info->points[i] = draw_util_rotate_point(center, info->points[i], props->rotationAngle);
+    }
+  }
+
+  return info;
+}
+
+static void offsetPathInfo(GPathInfo *pathInfo, GPoint offset)
+{
+  for (uint8_t i = 0; i < pathInfo->num_points; i++)
+  {
+    pathInfo->points[i].x -= offset.x;
+    pathInfo->points[i].y -= offset.y;
+  }
+}
+
 static void commitUpdate(
     const char *nodeId,
     PathLayerPropsMessage *newProps)
@@ -133,16 +203,29 @@ static void commitUpdate(
   // Merge newProps with cachedProps
   PathLayerPropsMessage *cachedProps = (PathLayerPropsMessage *)hash_get(propsRegistry, layer);
   path_layer_reconciler_merge_props(cachedProps, newProps, false);
+
+  GPathInfo *pathInfo = createPathInfo(cachedProps);
+
   // Call layer reconciler to update top, left, width and height
   OperationMessage *layerOperation = createLayerOperation(OPERATION_COMMIT_UPDATE, nodeId);
-  layerOperation->layerProps = malloc(sizeof(LayerPropsMessage));
-
-  calculateLayer(layerOperation->layerProps, cachedProps);
-
+  layerOperation->layerProps = (LayerPropsMessage *)malloc(sizeof(LayerPropsMessage));
+  calculateLayer(layerOperation->layerProps, pathInfo);
   layer_reconciler(NULL, layerOperation);
   free(layerOperation->nodeId);
   free(layerOperation->layerProps);
   free(layerOperation);
+
+  GRect frame = layer_get_frame(layer);
+
+  offsetPathInfo(pathInfo, frame.origin);
+
+  GPathInfo *cachedPathInfo = (GPathInfo *)hash_get(pathRegistry, layer);
+  cachedPathInfo->num_points = pathInfo->num_points;
+  free(cachedPathInfo->points);
+  cachedPathInfo->points = calloc(pathInfo->num_points, sizeof(GPoint));
+  memcpy(cachedPathInfo->points, pathInfo->points, pathInfo->num_points * sizeof(GPoint));
+  free(pathInfo->points);
+  free(pathInfo);
 
   layer_mark_dirty(layer);
 }
@@ -157,26 +240,6 @@ static PathLayerPropsMessage *setupCachedProps(PathLayerPropsMessage *props)
   return cachedProps;
 }
 
-static GPathInfo *createPathInfo(Layer *layer, PathLayerPropsMessage *props)
-{
-  GRect frame = layer_get_frame(layer);
-
-  GPoint *gpoints = (GPoint *)calloc(props->points_count, sizeof(GPoint));
-
-  for (uint8_t i = 0; i < props->points_count; i++)
-  {
-    gpoints[i] = (GPoint){
-        props->points[i].x - frame.origin.x,
-        props->points[i].y - frame.origin.y};
-  }
-
-  GPathInfo *info = malloc(sizeof(GPathInfo));
-  info->num_points = props->points_count;
-  info->points = gpoints;
-
-  return info;
-}
-
 static void appendChild(
     Layer *parentLayer,
     const char *nodeId,
@@ -184,11 +247,13 @@ static void appendChild(
 {
   PathLayerPropsMessage *cachedProps = setupCachedProps(props);
 
+  GPathInfo *pathInfo = createPathInfo(cachedProps);
+
   // Layer operation
   OperationMessage *layerOperation = createLayerOperation(OPERATION_APPEND_CHILD, nodeId);
 
   layerOperation->layerProps = malloc(sizeof(LayerPropsMessage));
-  calculateLayer(layerOperation->layerProps, cachedProps);
+  calculateLayer(layerOperation->layerProps, pathInfo);
   layer_reconciler(parentLayer, layerOperation);
 
   free(layerOperation->nodeId);
@@ -197,7 +262,9 @@ static void appendChild(
 
   Layer *layer = layer_registry_get(nodeId);
 
-  GPathInfo *pathInfo = createPathInfo(layer, cachedProps);
+  GRect frame = layer_get_frame(layer);
+
+  offsetPathInfo(pathInfo, frame.origin);
 
   hash_add(pathRegistry, layer, pathInfo);
   hash_add(propsRegistry, layer, cachedProps);
@@ -242,12 +309,16 @@ static void freePropsCache(void *key, void *value)
 
 void path_layer_reconciler_init()
 {
+  animation_registry_add_callback(NODE_TYPE_PATH_LAYER, handleAnimationUpdate);
+
   propsRegistry = hash_new();
   pathRegistry = hash_new();
 }
 
 void path_layer_reconciler_deinit()
 {
+  animation_registry_remove_callback(NODE_TYPE_PATH_LAYER);
+
   hash_foreach(propsRegistry, freePropsCache);
   hash_free(propsRegistry);
   hash_free(pathRegistry);
