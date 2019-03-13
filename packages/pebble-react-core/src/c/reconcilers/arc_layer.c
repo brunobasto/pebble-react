@@ -24,8 +24,18 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
     return;
   }
 
-  const GRect frame = layer_get_frame(layer);
-  const GRect rect = GRect(0, 0, frame.size.w, frame.size.h);
+  GRect frame = layer_get_frame(layer);
+
+  graphics_context_set_stroke_color(ctx, GColorBlack);
+  graphics_draw_rect(ctx, GRect(0, 0, frame.size.w, frame.size.h));
+
+  // APP_LOG(APP_LOG_LEVEL_ERROR, "inner rect [%d, %d]", props->center.x - frame.origin.x, props->center.y - frame.origin.y);
+
+  const GRect rect = GRect(
+      props->center.x - frame.origin.x - props->radius,
+      props->center.y - frame.origin.y - props->radius,
+      props->radius * 2,
+      props->radius * 2);
 
   GColor8 color = GColorWhite;
 
@@ -40,22 +50,23 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
   if (props->thicknessChanged)
   {
     graphics_fill_radial(
-      ctx,
-      rect,
-      GOvalScaleModeFitCircle,
-      props->thickness,
-      DEG_TO_TRIGANGLE(props->startAngle),
-      DEG_TO_TRIGANGLE(props->endAngle));
+        ctx,
+        rect,
+        GOvalScaleModeFitCircle,
+        props->thickness,
+        DEG_TO_TRIGANGLE(props->startAngle),
+        DEG_TO_TRIGANGLE(props->endAngle));
   }
-  else {
+  else
+  {
     graphics_context_set_stroke_width(ctx, 1);
 
     graphics_draw_arc(
-      ctx,
-      rect,
-      GOvalScaleModeFitCircle,
-      DEG_TO_TRIGANGLE(props->startAngle),
-      DEG_TO_TRIGANGLE(props->endAngle));
+        ctx,
+        rect,
+        GOvalScaleModeFitCircle,
+        DEG_TO_TRIGANGLE(props->startAngle),
+        DEG_TO_TRIGANGLE(props->endAngle));
   }
 }
 
@@ -64,6 +75,11 @@ void arc_layer_reconciler_merge_props(
     ArcLayerPropsMessage *source,
     bool force)
 {
+  if (source->centerChanged || force)
+  {
+    target->centerChanged = true;
+    target->center = source->center;
+  }
   if (source->colorChanged || force)
   {
     target->colorChanged = true;
@@ -89,21 +105,6 @@ void arc_layer_reconciler_merge_props(
     target->endAngleChanged = true;
     target->endAngle = source->endAngle;
   }
-
-  if (source->layerPropsChanged || force)
-  {
-    target->layerPropsChanged = true;
-
-    if (target->layerProps == NULL)
-    {
-      target->layerProps = malloc(sizeof(LayerPropsMessage));
-    }
-
-    if (source->layerProps != NULL)
-    {
-      layer_reconciler_merge_props(target->layerProps, source->layerProps, force);
-    }
-  }
 }
 
 static OperationMessage *createLayerOperation(
@@ -122,19 +123,54 @@ static OperationMessage *createLayerOperation(
 
 static void calculateLayer(
     LayerPropsMessage *layerProps,
-    ArcLayerPropsMessage *arcLayerProps)
+    ArcLayerPropsMessage *props)
 {
-  if (arcLayerProps->radiusChanged)
+  uint8_t r = props->radius;
+
+  const int32_t startTriangleAngle = DEG_TO_TRIGANGLE(props->startAngle);
+  const int32_t endTriangleAngle = DEG_TO_TRIGANGLE(props->endAngle);
+
+  int16_t startY = props->center.y - (r * cos_lookup(startTriangleAngle) / TRIG_MAX_RATIO);
+  int16_t endY = props->center.y - (r * cos_lookup(endTriangleAngle) / TRIG_MAX_RATIO);
+
+  int16_t startX = props->center.x + (r * sin_lookup(startTriangleAngle) / TRIG_MAX_RATIO);
+  int16_t endX = props->center.x + (r * sin_lookup(endTriangleAngle) / TRIG_MAX_RATIO);
+
+  if (startX < endX)
   {
-    layerProps->top = arcLayerProps->layerProps->top - arcLayerProps->radius;
-    layerProps->topChanged = 1;
-    layerProps->left = arcLayerProps->layerProps->left - arcLayerProps->radius;
-    layerProps->leftChanged = 1;
-    layerProps->height = arcLayerProps->radius * 2;
-    layerProps->heightChanged = 1;
-    layerProps->width = layerProps->height;
-    layerProps->widthChanged = 1;
+    layerProps->left = startX;
+    layerProps->width = (props->radius - props->thickness);
   }
+  else
+  {
+    layerProps->left = endX;
+    layerProps->width = (props->radius - props->thickness);
+  }
+
+  if (startY < endY)
+  {
+    layerProps->top = startY;
+    layerProps->height = (props->radius - props->thickness);
+  }
+  else
+  {
+    layerProps->top = endY;
+    layerProps->height = (props->radius - props->thickness);
+  }
+
+  if (props->startAngle > 0)
+  {
+    layerProps->left -= props->thickness;
+  }
+  else
+  {
+    // layerProps->width -= props->thickness;
+  }
+
+  layerProps->topChanged = 1;
+  layerProps->leftChanged = 1;
+  layerProps->heightChanged = 1;
+  layerProps->widthChanged = 1;
 }
 
 static void commitUpdate(
@@ -149,8 +185,6 @@ static void commitUpdate(
   // Call layer reconciler to update top, left, width and height
   OperationMessage *layerOperation = createLayerOperation(OPERATION_COMMIT_UPDATE, nodeId);
   layerOperation->layerProps = malloc(sizeof(LayerPropsMessage));
-
-  layer_reconciler_merge_props(layerOperation->layerProps, cachedProps->layerProps, true);
   calculateLayer(layerOperation->layerProps, cachedProps);
 
   layer_reconciler(NULL, layerOperation);
@@ -167,15 +201,6 @@ static void handleAnimationUpdate(
     OperationMessage *resultOperation,
     int percent)
 {
-  // Layer start Operation
-  OperationMessage *layerStartOperation = createLayerOperation(OPERATION_COMMIT_UPDATE, startOperation->nodeId);
-  layerStartOperation->layerProps = startOperation->arcLayerProps->layerProps;
-
-  // Layer end Operation
-  OperationMessage *layerEndOperation = malloc(sizeof(OperationMessage));
-  layerEndOperation->layerProps = endOperation->arcLayerProps->layerProps;
-
-  // Temp - in reality we will create a new operation and process results
   resultOperation->arcLayerProps = malloc(sizeof(ArcLayerPropsMessage));
 
   ArcLayerPropsMessage *startProps = startOperation->arcLayerProps;
@@ -187,20 +212,11 @@ static void handleAnimationUpdate(
   {
     resultOperation->arcLayerProps->radius = (int16_t)(startProps->radius + (endProps->radius - startProps->radius) * percent / 100);
   }
-
-  resultOperation->arcLayerProps->layerPropsChanged = 0;
-
-  // Clear layer start Operation
-  free(layerStartOperation->nodeId);
-  free(layerStartOperation);
-  // Clear layer end Operation
-  free(layerEndOperation);
 }
 
 static ArcLayerPropsMessage *setupCachedProps(ArcLayerPropsMessage *props)
 {
   ArcLayerPropsMessage *cachedProps = malloc(sizeof(ArcLayerPropsMessage));
-  cachedProps->layerProps = NULL;
 
   arc_layer_reconciler_merge_props(cachedProps, props, true);
 
@@ -218,7 +234,6 @@ static void appendChild(
   OperationMessage *layerOperation = createLayerOperation(OPERATION_APPEND_CHILD, nodeId);
 
   layerOperation->layerProps = malloc(sizeof(LayerPropsMessage));
-  layer_reconciler_merge_props(layerOperation->layerProps, cachedProps->layerProps, true);
   calculateLayer(layerOperation->layerProps, cachedProps);
   layer_reconciler(parentLayer, layerOperation);
 
@@ -239,7 +254,6 @@ static void removeChild(const char *nodeId, bool removeFromRegistry)
   Layer *layer = layer_registry_get(nodeId);
 
   ArcLayerPropsMessage *cachedProps = (ArcLayerPropsMessage *)hash_get(propsRegistry, layer);
-  free(cachedProps->layerProps);
   free(cachedProps);
 
   if (removeFromRegistry)
@@ -279,10 +293,6 @@ void arc_layer_reconciler_deinit()
 
 static void clearProps(ArcLayerPropsMessage *props)
 {
-  if (props->layerPropsChanged)
-  {
-    free(props->layerProps);
-  }
   free(props);
 }
 
