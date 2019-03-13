@@ -3,7 +3,7 @@ import { GaugeChart } from '@pebble-react/components';
 
 class App extends Component {
     state = {
-        value: 25
+        value: Math.floor(Math.random() * 101)
     };
 
     componentDidMount() {
