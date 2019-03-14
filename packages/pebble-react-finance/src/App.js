@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react';
-import { GaugeChart } from '@pebble-react/components';
+import { Badge, GaugeChart } from '@pebble-react/components';
 
 class App extends Component {
     state = {
@@ -26,11 +26,21 @@ class App extends Component {
 
         return (
             <Fragment>
-                <GaugeChart left={8} thickness={15} top={10} width={60} value={value} showPointer={false} />
-
-                <GaugeChart left={76} thickness={15} top={10} width={60} value={100 - value} showPointer={false} />
-
-                <GaugeChart left={8} thickness={20} top={60} width={128} value={value / 2} />
+                <Badge
+                    borderRadius={7}
+                    left={10}
+                    top={10}
+                >
+                    <text top={9} height={22} width={144}>Expenses</text>
+                </Badge>
+                <GaugeChart
+                    left={8}
+                    thickness={20}
+                    top={50}
+                    value={value}
+                    width={128}
+                />
+                <text top={130} height={22} width={144}>R$ 2.565,87</text>
             </Fragment>
         );
     }

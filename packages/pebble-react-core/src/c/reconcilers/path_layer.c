@@ -51,8 +51,10 @@ static void handleCanvasUpdate(Layer *layer, GContext *ctx)
   }
 
   // Stroke the path:
+  graphics_context_set_stroke_width(ctx, 1);
   graphics_context_set_stroke_color(ctx, strokeColor);
   gpath_draw_outline(ctx, path);
+  gpath_draw_outline_open(ctx, path);
 
   free(pathInfoCopy->points);
   free(pathInfoCopy);
@@ -108,6 +110,9 @@ static void handleAnimationUpdate(
     int percent)
 {
   resultOperation->pathLayerProps = malloc(sizeof(PathLayerPropsMessage));
+  resultOperation->pathLayerProps->fillColorChanged = 0;
+  resultOperation->pathLayerProps->pointsChanged = 0;
+  resultOperation->pathLayerProps->strokeColorChanged = 0;
 
   PathLayerPropsMessage *startProps = startOperation->pathLayerProps;
   PathLayerPropsMessage *endProps = endOperation->pathLayerProps;
@@ -140,6 +145,12 @@ static void calculateLayer(
     GPathInfo *pathInfo)
 {
   GRect frame = draw_util_rect_fitting_points(pathInfo->points, pathInfo->num_points);
+
+  // Necessary for drawing lines
+  if (frame.size.w == 0)
+    frame.size.w = 1;
+  if (frame.size.h == 0)
+    frame.size.h = 1;
 
   layerProps->top = frame.origin.y;
   layerProps->topChanged = 1;

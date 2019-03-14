@@ -164,8 +164,6 @@ void operations_process_unit(Window *mainWindow, OperationMessage *operationMess
 
 void operations_process_batch(Window *mainWindow, BatchOperationsMessage *batchOperations)
 {
-  APP_LOG(APP_LOG_LEVEL_INFO, "got %d operations", batchOperations->operations_count);
-
   for (uint16_t i = 0; i < batchOperations->operations_count; i++)
   {
     OperationMessage operationMessage = batchOperations->operations[i];
