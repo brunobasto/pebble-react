@@ -4,13 +4,12 @@
 
 GPoint draw_util_rotate_point(GPoint center, GPoint point, int16_t angle)
 {
-  double fangle = (double)angle * 3.14159265 / 180;
-
   const int16_t cx = center.x;
   const int16_t cy = center.y;
+  const int32_t triangleAngle = DEG_TO_TRIGANGLE(angle);
 
-  const int16_t rx = ((point.x - cx) * cos(fangle) + (point.y - cy) * sin(fangle)) + cx;
-  const int16_t ry = (-(point.x - cx) * sin(fangle) + (point.y - cy) * cos(fangle)) + cy;
+  const int16_t rx = ((point.x - cx) * cos_lookup(triangleAngle) / TRIG_MAX_RATIO + (point.y - cy) * sin_lookup(triangleAngle) / TRIG_MAX_RATIO) + cx;
+  const int16_t ry = (-(point.x - cx) * sin_lookup(triangleAngle) / TRIG_MAX_RATIO + (point.y - cy) * cos_lookup(triangleAngle) / TRIG_MAX_RATIO) + cy;
 
   return (GPoint){rx, ry};
 }
