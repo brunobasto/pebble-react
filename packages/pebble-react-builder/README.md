@@ -1,4 +1,4 @@
-This tool should be used to build an app create with pebble-react-create
+This tool should be used to build an app created with pebble-react-create
 
 It should be able to copy the C files from pebble-react-core inside the node_modules folder of the boilerplate app to a build folder.
 
