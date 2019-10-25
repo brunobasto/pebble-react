@@ -118,7 +118,7 @@ static void configureAppMessage()
 
 static void prv_window_load(Window *window)
 {
-  window_set_background_color(window, GColorWhite);
+  window_set_background_color(window, GColorBlack);
 }
 
 static void prv_window_unload(Window *window)

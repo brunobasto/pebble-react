@@ -2,12 +2,15 @@
   "name": "@pebble-react/core",
   "author": "Bruno Basto",
   "main": "src/js/pebble/render/index.js",
-  "version": "0.0.10",
+  "version": "0.0.13",
   "keywords": [
     "pebble-app"
   ],
   "babel": {
     "plugins": [
+      "transform-es2015-destructuring",
+      "transform-es2015-parameters",
+      "transform-object-rest-spread",
       "transform-decorators-legacy"
     ],
     "presets": [
@@ -19,8 +22,8 @@
   "dependencies": {
     "babel-polyfill": "^6.26.0",
     "protobufjs": "^6.8.8",
-    "react": "^16.3.2",
-    "react-reconciler": "^0.20.0"
+    "react": "^16.11.0",
+    "react-reconciler": "^0.21.0"
   },
   "scripts": {
     "compile": "npm run build && pebble build",
@@ -72,5 +75,5 @@
       "message"
     ]
   },
-  "gitHead": "fca52ef3a666d752f3f294390159bb6a03e47a04"
+  "gitHead": "74bf20abc11621f85c95172720c584d47205b7eb"
 }

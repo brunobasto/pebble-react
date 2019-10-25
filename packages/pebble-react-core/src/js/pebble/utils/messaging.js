@@ -109,7 +109,6 @@ export const flushMessages = async () => {
 
         // For debugging
         let decoded = BatchOperationsMessage.decode(buffer);
-        console.log(decoded);
 
         var array = [];
         for (var i = 0; i < buffer.byteLength; i++) {

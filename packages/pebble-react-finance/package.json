@@ -1,14 +1,14 @@
 {
   "author": "Bruno Basto",
   "name": "@pebble-react/finance",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "main": "index.js",
   "license": "MIT",
   "private": false,
   "dependencies": {
-    "@pebble-react/builder": "^0.1.3",
-    "@pebble-react/components": "^0.0.2",
-    "@pebble-react/core": "^0.0.10",
+    "@pebble-react/builder": "^0.1.5",
+    "@pebble-react/components": "^0.0.3",
+    "@pebble-react/core": "^0.0.13",
     "babel-polyfill": "^6.26.0"
   },
   "devDependencies": {
@@ -26,5 +26,6 @@
     "build": "webpack --config webpack.config.js && pebble-react build",
     "emulator": "npm run build && cd build && pebble wipe && pebble build && pebble install --emulator basalt --logs",
     "phone": "npm run build && cd build && pebble build && pebble install --phone"
-  }
+  },
+  "gitHead": "74bf20abc11621f85c95172720c584d47205b7eb"
 }

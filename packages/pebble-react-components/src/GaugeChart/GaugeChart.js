@@ -8,6 +8,7 @@ class GaugeChart extends Component {
         maxValue: 100,
         minValue: 0,
         padding: 3,
+        pointerColor: '#FFFFFF',
         sections: 5,
         showPointer: true,
         thickness: 10,
@@ -54,7 +55,13 @@ class GaugeChart extends Component {
     }
 
     renderPointer() {
-        const { minValue, thickness, width, value } = this.props;
+        const {
+            minValue,
+            pointerColor,
+            thickness,
+            value,
+            width
+        } = this.props;
         const center = this.getCenter();
         const pointerHeight = (width / 2) - (thickness * 1.25);
         const pointerRadius = 6;
@@ -78,6 +85,7 @@ class GaugeChart extends Component {
                     duration={1000}
                 >
                     <path
+                        fillColor={pointerColor}
                         points={[
                             { x: center.x, y: center.y - pointerHeight },
                             { x: center.x - pointerRadius, y: center.y },

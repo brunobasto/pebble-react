@@ -1,4 +1,3 @@
-const CleanWebpackPlugin = require('clean-webpack-plugin');
 const path = require('path');
 const webpack = require('webpack');
 
@@ -14,6 +13,7 @@ const config = {
     loaders: [
       {
         loaders: ['babel-loader'],
+        test: /\.js$/
       },
       {
         loaders: ['json-loader'],
@@ -26,9 +26,7 @@ const config = {
     path: path.resolve('build/src/js')
   },
   plugins: [
-    new webpack.DefinePlugin({ "process.env.NODE_ENV": JSON.stringify("production") }),
-    new CleanWebpackPlugin(),
-    new webpack.optimize.UglifyJsPlugin({sourceMap: true})
+    new webpack.DefinePlugin({ "process.env.NODE_ENV": JSON.stringify("development") })
   ]
 };
 
