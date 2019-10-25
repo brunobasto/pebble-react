@@ -1,14 +1,14 @@
 {
   "author": "Bruno Basto",
   "name": "@pebble-react/finance",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "index.js",
   "license": "MIT",
   "private": false,
   "dependencies": {
     "@pebble-react/builder": "^0.1.5",
     "@pebble-react/components": "^0.0.3",
-    "@pebble-react/core": "^0.0.12",
+    "@pebble-react/core": "^0.0.13",
     "babel-polyfill": "^6.26.0"
   },
   "devDependencies": {
