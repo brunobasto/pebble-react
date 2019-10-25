@@ -26,6 +26,8 @@
     "webpack": "^4.29.6",
     "webpack-cli": "^3.2.3"
   },
+  "private": false,
   "author": "Bruno Basto",
-  "license": "ISC"
+  "license": "ISC",
+  "gitHead": "9e3b5679b516bb580a48988d8f11d76b0978c897"
 }

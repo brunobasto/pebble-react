@@ -5,7 +5,7 @@
   "main": "index.js",
   "license": "MIT",
   "private": false,
-  "gitHead": "fca52ef3a666d752f3f294390159bb6a03e47a04",
+  "gitHead": "9e3b5679b516bb580a48988d8f11d76b0978c897",
   "babel": {
     "plugins": [
       "transform-es2015-destructuring",

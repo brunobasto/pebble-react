@@ -19,5 +19,6 @@
     "rimraf": "^2.6.3",
     "yargs": "^13.2.2"
   },
-  "gitHead": "fca52ef3a666d752f3f294390159bb6a03e47a04"
+  "private": false,
+  "gitHead": "9e3b5679b516bb580a48988d8f11d76b0978c897"
 }
