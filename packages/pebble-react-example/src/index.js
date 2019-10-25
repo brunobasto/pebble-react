@@ -5,7 +5,5 @@ import React from 'react';
 import render from "@pebble-react/core";
 
 Pebble.addEventListener('ready', () => {
-    (async () => {
-        await render(<App />);
-    })();
+    render(<App />);
 });

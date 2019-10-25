@@ -3,22 +3,96 @@ import { createElement } from '../utils/createElement';
 import TextNode from '../components/TextNode';
 import { flushMessages } from '../utils/messaging'
 
+import * as NoPersistence from './NoPersistence';
+import * as NoHydration from './NoHydration';
+
+import {
+    now as FrameSchedulingNow,
+    cancelDeferredCallback as FrameSchedulingCancelDeferredCallback,
+    scheduleDeferredCallback as FrameSchedulingScheduleDeferredCallback,
+    shouldYield as FrameSchedulingShouldYield,
+  } from './Scheduling';
+
 export let ROOT_NODE = {};
 
 const DEFAULT_HOST_CONTEXT = {};
 
 const PebbleRenderer = Reconciler({
-    appendChild(parent, child) {
-        if (parent.appendChild) {
-            parent.appendChild(child);
-        }
-        if (typeof child.render === 'function') child.render(parent); // we just added a new child, so we want to render it
-    },
+    ...NoHydration,
+    ...NoPersistence,
+
+    now: FrameSchedulingNow,
+    isPrimaryRenderer: true,
+    scheduleDeferredCallback: FrameSchedulingScheduleDeferredCallback,
+    cancelDeferredCallback: FrameSchedulingCancelDeferredCallback,
+    shouldYield: FrameSchedulingShouldYield,
+    scheduleTimeout: setTimeout,
+    cancelTimeout: clearTimeout,
+    noTimeout: -1,
+    schedulePassiveEffects: FrameSchedulingScheduleDeferredCallback,
+    cancelPassiveEffects: FrameSchedulingCancelDeferredCallback,
 
     appendInitialChild(parent, child) {
         if (parent.appendChild) {
             parent.appendChild(child);
         }
+    },
+
+    createInstance(type, props, internalInstanceHandle) {
+        if (typeof type === 'function') {
+            console.log('create function');
+            return type(props, internalInstanceHandle);
+        }
+
+        return createElement(type, props, internalInstanceHandle);
+    },
+
+    createTextInstance(text, rootContainerInstance, internalInstanceHandle) {
+        return new TextNode(text);
+    },
+
+    finalizeInitialChildren(element, type, props) {
+        return true;
+    },
+
+    getRootHostContext(rootInstance) {
+        return rootInstance;
+    },
+
+    getChildHostContext(parentHostContext) {
+        return parentHostContext;
+    },
+
+    getPublicInstance(inst) {
+        return inst;
+    },
+
+    prepareForCommit() {
+    },
+
+    prepareUpdate(component, type, oldProps, newProps) {
+        return component.prepareUpdate(oldProps, newProps, ROOT_NODE);
+    },
+
+    resetAfterCommit() {
+        flushMessages();
+    },
+
+    shouldDeprioritizeSubtree(type, props) {
+        return false;
+    },
+
+    shouldSetTextContent(props) {
+        return false;
+    },
+
+    // Mutation
+
+    appendChild(parent, child) {
+        if (parent.appendChild) {
+            parent.appendChild(child);
+        }
+        if (typeof child.render === 'function') child.render(parent); // we just added a new child, so we want to render it
     },
 
     appendChildToContainer(parent, child) {
@@ -33,14 +107,6 @@ const PebbleRenderer = Reconciler({
         parent.removeChild(child);
     },
 
-    createInstance(type, props, internalInstanceHandle) {
-        return createElement(type, props, internalInstanceHandle);
-    },
-
-    createTextInstance(text, rootContainerInstance, internalInstanceHandle) {
-        return new TextNode(text);
-    },
-
     commitTextUpdate(textInstance, oldText, newText) {
         textInstance.commitUpdate(newText);
     },
@@ -51,21 +117,6 @@ const PebbleRenderer = Reconciler({
 
     insertBefore(parent, child, beforeChild) {
         parent.insertBefore(child, beforeChild);
-    },
-
-    finalizeInitialChildren(element, type, props) {
-        return true;
-    },
-
-    getPublicInstance(inst) {
-        return inst;
-    },
-
-    prepareForCommit() {
-    },
-
-    prepareUpdate(component, type, oldProps, newProps) {
-        return component.prepareUpdate(oldProps, newProps, ROOT_NODE);
     },
 
     commitMount(component, type, newProps, internalInstanceHandle) {
@@ -90,38 +141,25 @@ const PebbleRenderer = Reconciler({
         component.commitUpdate(changed);
     },
 
-    resetAfterCommit() {
-        flushMessages();
-    },
-
     resetTextContent(wordElement) {
-    },
-
-    getRootHostContext(rootInstance) {
-        return DEFAULT_HOST_CONTEXT;
-    },
-
-    getChildHostContext(parentHostContext) {
-        return parentHostContext;
     },
 
     shouldSetTextContent(type, props) {
         return false;
     },
 
-    now: () => { },
-
     supportsMutation: true,
-    supportsPersistence: false
 });
 
 // renders the component
-async function render(element) {
+function render(element) {
     ROOT_NODE = createElement('ROOT');
 
     const node = PebbleRenderer.createContainer(ROOT_NODE);
 
     PebbleRenderer.updateContainer(element, node, null);
+
+    return PebbleRenderer.getPublicRootInstance(node);
 }
 
 export default render;
