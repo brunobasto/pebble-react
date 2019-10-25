@@ -1,6 +1,6 @@
 {
   "name": "@pebble-react/builder",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "CLI for building apps created with pebble-react-create",
   "bin": {
     "pebble-react": "bin/cli.js"

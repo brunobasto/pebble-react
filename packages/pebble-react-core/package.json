@@ -2,7 +2,7 @@
   "name": "@pebble-react/core",
   "author": "Bruno Basto",
   "main": "src/js/pebble/render/index.js",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "keywords": [
     "pebble-app"
   ],
