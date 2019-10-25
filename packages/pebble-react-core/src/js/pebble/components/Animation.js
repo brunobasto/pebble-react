@@ -32,8 +32,8 @@ class Animation extends PebbleComponent {
         const startOperations = this.getStartOperations(props);
         const endOperations = this.getEndOperations(props);
 
-        delete props.animationProps;
-        delete props.children;
+        props.animationProps = null;
+        props.children = null;
 
         return {
             animationProps: AnimationPropsMessage.create(
