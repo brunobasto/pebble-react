@@ -40,7 +40,6 @@ const PebbleRenderer = Reconciler({
 
     createInstance(type, props, internalInstanceHandle) {
         if (typeof type === 'function') {
-            console.log('create function');
             return type(props, internalInstanceHandle);
         }
 
