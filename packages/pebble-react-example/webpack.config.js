@@ -1,4 +1,3 @@
-const CleanWebpackPlugin = require('clean-webpack-plugin');
 const path = require('path');
 const webpack = require('webpack');
 
@@ -10,14 +9,40 @@ const config = {
   entry: [
     resolveModule('index.js')
   ],
+  mode: 'development',
   module: {
-    loaders: [
+    rules: [
       {
-        loaders: ['babel-loader'],
+        test: /\.(svg|png|jpe?g|gif)$/i,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              name: '[path][name].[ext]',
+            },
+          },
+        ],
       },
       {
-        loaders: ['json-loader'],
-        test: /\.json$/
+        test: /\.css$/i,
+        use: ['style-loader', 'css-loader'],
+      },
+      {
+        test: /\.js$/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              "@babel/preset-env",
+              "@babel/preset-react"
+            ],
+            plugins: [
+              [
+                "@babel/plugin-proposal-class-properties"
+              ]
+            ]
+          }
+        }
       }
     ]
   },
@@ -26,9 +51,7 @@ const config = {
     path: path.resolve('build/src/js')
   },
   plugins: [
-    new webpack.DefinePlugin({ "process.env.NODE_ENV": JSON.stringify("production") }),
-    new CleanWebpackPlugin(),
-    new webpack.optimize.UglifyJsPlugin({sourceMap: true})
+    new webpack.EnvironmentPlugin(['NODE_ENV', 'CLIENT_URL'])
   ]
 };
 

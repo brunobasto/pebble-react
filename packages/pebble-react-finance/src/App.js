@@ -40,7 +40,14 @@ class App extends Component {
                     value={value}
                     width={128}
                 />
-                <text top={130} height={22} width={144}>R$ 2.565,87</text>
+                <text
+                    color={'#FFFFFF'}
+                    top={130}
+                    height={22}
+                    width={144}
+                >
+                    R$ 2.565,87
+                </text>
             </Fragment>
         );
     }
