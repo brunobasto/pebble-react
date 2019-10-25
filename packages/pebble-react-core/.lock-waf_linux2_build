@@ -1,0 +1,8 @@
+argv = ['/root/.pebble-sdk/SDKs/current/sdk-core/pebble/waf', 'configure']
+environ = {'HOME': '/root', 'PEBBLE_TOOL_VERSION': 'pebble-sdk-4.5-linux64', 'PEBBLE_SDK_VERSION': 'https://github.com/aveao/PebbleArchive/raw/master/SDKCores/sdk-core-4.3.tar.bz2', 'NO_GCE_CHECK': 'False', 'PEBBLE_TOOLCHAIN_PATH': '/root/pebble-dev/pebble-sdk-4.5-linux64/arm-cs-tools/bin', 'PATH': '/root/pebble-dev/pebble-sdk-4.5-linux64/arm-cs-tools/bin:/root/pebble-dev/pebble-sdk-4.5-linux64/bin:/root/pebble-dev/pebble-sdk-4.5-linux64/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'DISPLAY': 'host.docker.internal:0', '_': '/root/pebble-dev/pebble-sdk-4.5-linux64/.env/bin/python', 'TERM': 'xterm', 'PEBBLE_PATH': '/root/pebble-dev/pebble-sdk-4.5-linux64', 'SHLVL': '1', 'HOSTNAME': '84c1ab46ebb5', 'PYTHONHOME': '/root/.pebble-sdk/SDKs/current/sdk-core/../.env', 'NODE_PATH': '/root/.pebble-sdk/SDKs/current/sdk-core/../node_modules', 'PWD': '/pebble', 'PHONESIM_PATH': '/root/pebble-dev/pebble-sdk-4.5-linux64/.env//bin/pypkjs', 'PEBBLE_HOME': '/root/pebble-dev/pebble-sdk-4.5-linux64', 'NOCLIMB': '1'}
+files = ['/pebble/wscript']
+hash = -4798181430432405660
+options = {'files': '', 'jobs': 6, 'verbose': 0, 'nocache': False, 'progress_bar': 0, 'no_groups': False, 'distcheck_args': None, 'top': '', 'sandbox': False, 'destdir': '', 'keep': 0, 'zones': '', 'debug': False, 'prefix': '/usr/local/', 'timestamp': None, 'download': False, 'force': False, 'targets': '', 'out': ''}
+out_dir = '/pebble/build'
+run_dir = '/pebble'
+top_dir = '/pebble'
