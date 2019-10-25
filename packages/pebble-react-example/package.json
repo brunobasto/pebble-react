@@ -1,14 +1,14 @@
 {
   "author": "Bruno Basto",
   "name": "@pebble-react/example",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "main": "index.js",
   "license": "MIT",
   "private": false,
   "gitHead": "fca52ef3a666d752f3f294390159bb6a03e47a04",
   "dependencies": {
-    "@pebble-react/builder": "^0.1.4",
-    "@pebble-react/core": "^0.0.10",
+    "@pebble-react/builder": "^0.1.5",
+    "@pebble-react/core": "^0.0.11",
     "babel-polyfill": "^6.26.0",
     "react": "^16.11.0"
   },
