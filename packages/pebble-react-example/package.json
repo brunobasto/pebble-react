@@ -5,11 +5,12 @@
   "main": "index.js",
   "license": "MIT",
   "private": false,
-  "gitHead": "fca52ef3a666d752f3f294390159bb6a03e47a04",
+  "gitHead": "22578a12f6555ae1024dbaece507b71b6f06eaad",
   "dependencies": {
     "@pebble-react/builder": "^0.1.5",
     "@pebble-react/core": "^0.0.12",
     "babel-polyfill": "^6.26.0",
+    "core-js": "^3.3.4",
     "react": "^16.11.0"
   },
   "devDependencies": {

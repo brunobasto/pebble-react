@@ -32,14 +32,20 @@ const config = {
         use: {
           loader: 'babel-loader',
           options: {
+            exclude: ['node_modules/@babel'],
+            include: ['./src', '../pebble-react-core'],
             presets: [
-              "@babel/preset-env",
+              ["@babel/preset-env", {
+                useBuiltIns: 'usage',
+                targets: {
+                  "browsers": ["last 2 versions", "ie >= 7"]
+                },
+                "modules": false
+              }],
               "@babel/preset-react"
             ],
             plugins: [
-              [
-                "@babel/plugin-proposal-class-properties"
-              ]
+              "@babel/plugin-transform-async-to-generator"
             ]
           }
         }

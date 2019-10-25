@@ -26,5 +26,6 @@
     "build": "webpack --config webpack.config.js && pebble-react build",
     "emulator": "npm run build && cd build && pebble wipe && pebble build && pebble install --emulator basalt --logs",
     "phone": "npm run build && cd build && pebble build && pebble install --phone"
-  }
+  },
+  "gitHead": "22578a12f6555ae1024dbaece507b71b6f06eaad"
 }
