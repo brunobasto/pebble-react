@@ -31,7 +31,7 @@ const config = {
     path: path.resolve('src/js')
   },
   plugins: [
-    new webpack.DefinePlugin({ "process.env.NODE_ENV": JSON.stringify("production") }),
+    new webpack.DefinePlugin({ "process.env.NODE_ENV": JSON.stringify("development") }),
     new CleanWebpackPlugin(),
     new webpack.optimize.UglifyJsPlugin({sourceMap: true}),
     // new BundleAnalyzerPlugin()
