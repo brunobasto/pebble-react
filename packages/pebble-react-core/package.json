@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "babel-polyfill": "^6.26.0",
-    "protobufjs": "^6.8.8",
+    "protobufjs": "^6.11.3",
     "react": "^16.11.0",
     "react-reconciler": "^0.21.0"
   },
