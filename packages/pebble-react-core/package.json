@@ -50,7 +50,7 @@
     "eslint": "^4.10.0",
     "eslint-plugin-react": "^7.4.0",
     "json-loader": "^0.5.7",
-    "webpack": "^1.8.7",
+    "webpack": "^5.75.0",
     "webpack-bundle-analyzer": "^3.3.2"
   },
   "pebble": {
